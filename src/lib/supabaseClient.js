@@ -1,8 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Ideally, put these in a .env file: REACT_APP_SUPABASE_URL, etc.
-const supabaseUrl = "https://zdgswijfzycmriwbvhah.supabase.co";
-const supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkZ3N3aWpmenljbXJpd2J2aGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MjY3ODgsImV4cCI6MjA3OTUwMjc4OH0.RP5MEmPvT4xCM-nt-WQAgVY72l-FWLUCTHqsA2hXhG0";
+// Now we read from the environment variables
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+// Safety check to warn you if keys are missing
+if (!supabaseUrl || !supabaseKey) {
+  console.warn(
+    "Supabase credentials missing! Make sure you have a .env file locally or Environment Variables set on Vercel."
+  );
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
