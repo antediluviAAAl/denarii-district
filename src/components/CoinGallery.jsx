@@ -19,6 +19,64 @@ const CATEGORY_COLORS = [
   { bg: "#f1f5f9", border: "#94a3b8", text: "#475569" },
 ];
 
+// --- SHARED COMPONENT: PERIOD HEADER ---
+// Pure content component. Layout/Spacing is handled by the wrapper.
+const PeriodHeader = ({
+  title,
+  count,
+  ownedCount,
+  isExpanded,
+  borderColor,
+}) => {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
+        height: "100%", // Fill the wrapper
+        userSelect: "none",
+      }}
+    >
+      <div
+        className="period-chevron"
+        style={{
+          marginRight: "0.5rem",
+          transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)",
+        }}
+      >
+        <ChevronDown size={18} />
+      </div>
+
+      <h3
+        className="period-title"
+        style={{
+          fontSize: "1rem",
+          fontWeight: "700",
+          color: "#475569",
+          margin: 0,
+          borderLeft: `4px solid ${borderColor}`,
+          paddingLeft: "0.75rem",
+        }}
+      >
+        {title}
+      </h3>
+
+      <span
+        className="category-count"
+        style={{
+          fontSize: "0.85rem",
+          background: "#f1f5f9",
+          marginLeft: "1rem",
+        }}
+      >
+        {count} coins
+        <span className="owned-in-category">• {ownedCount} owned</span>
+      </span>
+    </div>
+  );
+};
+
 export default function CoinGallery({
   coins,
   loading,
@@ -79,77 +137,124 @@ export default function CoinGallery({
   }, [coins, categories]);
 
   // --- EXPAND/COLLAPSE STATE ---
-  // Default is empty object {}.
-  // In our logic, undefined means "Collapsed".
-  // Clicking toggle sets it to true (Expanded).
-  // This satisfies the requirement for "Start Collapsed" in both Grid and Table.
-  const [expanded, setExpanded] = useState({});
-
+  const [expandedCategories, setExpandedCategories] = useState({});
   const toggleCategory = (id) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpandedCategories((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // --- CLICK HANDLER ---
-  const handleRowBackgroundClick = (e, groupId) => {
-    if (
-      e.target === e.currentTarget ||
-      e.target.classList.contains("virtual-row") ||
-      e.target.classList.contains("virtual-spacer") ||
-      e.target.classList.contains("category-content")
-    ) {
-      toggleCategory(groupId);
-    }
+  const [collapsedPeriods, setCollapsedPeriods] = useState({});
+  const togglePeriod = (id) => {
+    setCollapsedPeriods((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // --- HELPER: Group Coins by Period ---
+  const getCoinsByPeriod = (categoryCoins) => {
+    const periodMap = {};
+    const noPeriodKey = "no_period";
+
+    categoryCoins.forEach((c) => {
+      const pid = c.period_id || noPeriodKey;
+      const pName = c.d_period?.period_name || "General Issues";
+      const startYear = c.d_period?.period_start_year || 0;
+
+      if (!periodMap[pid]) {
+        periodMap[pid] = {
+          id: pid,
+          name: pName,
+          startYear: startYear,
+          coins: [],
+        };
+      }
+      periodMap[pid].coins.push(c);
+    });
+    return Object.values(periodMap).sort((a, b) => b.startYear - a.startYear);
   };
 
   // --- VIRTUALIZER (GRID ONLY) ---
   const virtualRows = useMemo(() => {
     if (loading || viewMode === "table") return [];
     const rows = [];
+
     groupedCoins.forEach((group) => {
+      // 1. Category Header
       rows.push({ type: "header", group });
-      if (expanded[group.id]) {
-        for (let i = 0; i < group.coins.length; i += columns) {
+
+      if (expandedCategories[group.id]) {
+        const periodGroups = getCoinsByPeriod(group.coins);
+
+        periodGroups.forEach((period, pIndex) => {
+          const isPeriodExpanded = !collapsedPeriods[period.id];
+          const isLastPeriod = pIndex === periodGroups.length - 1;
+          const periodOwnedCount = period.coins.filter((c) => c.is_owned).length;
+          const isLastVisualElement = isLastPeriod && !isPeriodExpanded;
+
+          // 2. Period Subheader Row
           rows.push({
-            type: "row",
-            coins: group.coins.slice(i, i + columns),
+            type: "subheader",
+            title: period.name,
+            count: period.coins.length,
+            ownedCount: periodOwnedCount,
             groupId: group.id,
-            isLast: i + columns >= group.coins.length,
+            periodId: period.id,
+            isExpanded: isPeriodExpanded,
+            isLastInGroup: isLastVisualElement,
           });
-        }
+
+          if (isPeriodExpanded) {
+            // 3. Coin Rows
+            for (let i = 0; i < period.coins.length; i += columns) {
+              const isLastRowInPeriod = i + columns >= period.coins.length;
+              const isLastRowInGroup = isLastPeriod && isLastRowInPeriod;
+
+              rows.push({
+                type: "row",
+                coins: period.coins.slice(i, i + columns),
+                groupId: group.id,
+                isLast: isLastRowInGroup,
+              });
+            }
+          }
+        });
       }
     });
     return rows;
-  }, [groupedCoins, expanded, columns, loading, viewMode]);
+  }, [
+    groupedCoins,
+    expandedCategories,
+    collapsedPeriods,
+    columns,
+    loading,
+    viewMode,
+  ]);
 
   const rowVirtualizer = useWindowVirtualizer({
     count: virtualRows.length,
-    estimateSize: (index) => (virtualRows[index].type === "header" ? 94 : 380),
+    estimateSize: (index) => {
+      const row = virtualRows[index];
+      if (row.type === "header") return 94; // Category Header
+      if (row.type === "subheader") return 50; // Period Header (Fixed Height)
+      return 380; // Coin Row
+    },
     overscan: 5,
     scrollMargin: offsetTop,
   });
 
-  // --- HELPER: Group Coins by Period (For Table Mode) ---
-  const getCoinsByPeriod = (categoryCoins) => {
-    const periodMap = {};
-    categoryCoins.forEach((c) => {
-      const pid = c.period_id;
-      const pName = c.d_period?.period_name;
-      const startYear = c.d_period?.period_start_year || 0;
-
-      if (pid && pName) {
-        if (!periodMap[pid]) {
-          periodMap[pid] = {
-            id: pid,
-            name: pName,
-            startYear: startYear,
-            coins: [],
-          };
-        }
-        periodMap[pid].coins.push(c);
-      }
-    });
-
-    return Object.values(periodMap).sort((a, b) => b.startYear - a.startYear);
+  // --- BACKGROUND CLICK HANDLER (COLLAPSE LOGIC) ---
+  const handleRowBackgroundClick = (e, groupId) => {
+    // We check if the clicked element is one of our "background" containers.
+    // This allows clicks on whitespace to collapse the category, 
+    // while clicks on interactive elements (buttons, inputs) work normally.
+    if (
+      e.target === e.currentTarget ||
+      e.target.classList.contains("virtual-row") ||
+      e.target.classList.contains("virtual-spacer") ||
+      e.target.classList.contains("period-row") || 
+      e.target.classList.contains("category-content") ||
+      e.target.classList.contains("period-group") ||
+      e.target.classList.contains("period-content-wrapper")
+    ) {
+      toggleCategory(groupId);
+    }
   };
 
   if (loading) {
@@ -212,7 +317,7 @@ export default function CoinGallery({
         <div className="tables-layout">
           {groupedCoins.map((group) => {
             const catOwnedCount = group.coins.filter((c) => c.is_owned).length;
-            const isExpanded = expanded[group.id];
+            const isCategoryExpanded = expandedCategories[group.id];
 
             return (
               <div
@@ -225,6 +330,7 @@ export default function CoinGallery({
                   overflow: "visible",
                 }}
               >
+                {/* Category Header */}
                 <div
                   className="category-header"
                   onClick={() => toggleCategory(group.id)}
@@ -233,10 +339,10 @@ export default function CoinGallery({
                     borderTop: `1px solid ${group.color.border}`,
                     borderLeft: `1px solid ${group.color.border}`,
                     borderRight: `1px solid ${group.color.border}`,
-                    borderBottom: isExpanded
+                    borderBottom: isCategoryExpanded
                       ? "none"
                       : `1px solid ${group.color.border}`,
-                    borderRadius: isExpanded ? "12px 12px 0 0" : "12px",
+                    borderRadius: isCategoryExpanded ? "12px 12px 0 0" : "12px",
                     height: "70px",
                     boxSizing: "border-box",
                     marginBottom: "0",
@@ -257,7 +363,7 @@ export default function CoinGallery({
                     </span>
                   </div>
                   <button className="category-toggle">
-                    {isExpanded ? (
+                    {isCategoryExpanded ? (
                       <ChevronUp size={20} />
                     ) : (
                       <ChevronDown size={20} />
@@ -265,75 +371,71 @@ export default function CoinGallery({
                   </button>
                 </div>
 
-                {isExpanded && (
+                {isCategoryExpanded && (
                   <div
                     className="category-content"
                     onClick={(e) => handleRowBackgroundClick(e, group.id)}
                     title="Click background to collapse category"
                     style={{
-                      padding: "1.5rem",
+                      // REMOVED PADDING: Allows headers to go edge-to-edge
+                      padding: "0", 
                       backgroundColor: "white",
                       borderLeft: `1px solid ${group.color.border}`,
                       borderRight: `1px solid ${group.color.border}`,
                       borderBottom: `1px solid ${group.color.border}`,
                       borderTop: "none",
                       borderRadius: "0 0 12px 12px",
+                      overflow: "hidden", 
                       cursor: "pointer",
                     }}
                   >
-                    {/* Only calculate periods if we are actually rendering (Perf Boost) */}
+                    {/* PERIODS LOOP */}
                     {getCoinsByPeriod(group.coins).map((periodGroup) => {
                       const periodOwnedCount = periodGroup.coins.filter(
                         (c) => c.is_owned
                       ).length;
+                      const isPeriodExpanded = !collapsedPeriods[periodGroup.id];
 
                       return (
                         <div
                           key={periodGroup.id}
                           className="period-group"
-                          style={{ marginBottom: "2rem", cursor: "default" }}
-                          onClick={(e) => e.stopPropagation()}
+                          style={{ cursor: "default" }}
                         >
-                          <div
+                          {/* TABLE HEADER WRAPPER */}
+                          <div 
+                            className="period-row"
+                            onClick={() => togglePeriod(periodGroup.id)}
                             style={{
-                              display: "flex",
-                              alignItems: "baseline",
-                              gap: "1rem",
-                              marginBottom: "1rem",
-                              paddingLeft: "0.5rem",
+                                padding: "0 1.5rem", 
+                                height: "50px",
+                                display: "flex",
+                                alignItems: "center",
+                                cursor: "pointer",
+                                backgroundColor: "white",
                             }}
                           >
-                            <h3
-                              className="period-title"
-                              style={{
-                                fontSize: "1rem",
-                                fontWeight: "700",
-                                color: "#475569",
-                                margin: 0,
-                                borderLeft: `4px solid ${group.color.border}`,
-                                paddingLeft: "0.75rem",
-                              }}
-                            >
-                              {periodGroup.name}
-                            </h3>
-                            <span
-                              className="category-count"
-                              style={{
-                                fontSize: "0.85rem",
-                                background: "#f1f5f9",
-                              }}
-                            >
-                              {periodGroup.coins.length} coins
-                              <span className="owned-in-category">
-                                • {periodOwnedCount} owned
-                              </span>
-                            </span>
+                            <PeriodHeader
+                                title={periodGroup.name}
+                                count={periodGroup.coins.length}
+                                ownedCount={periodOwnedCount}
+                                isExpanded={isPeriodExpanded}
+                                borderColor={group.color.border}
+                            />
                           </div>
 
-                          <CoinTable
-                            coins={periodGroup.coins}
-                            onCoinClick={onCoinClick}
-                          />
+                          {isPeriodExpanded && (
+                            // WRAPPER FOR CONTENT TO RESTORE PADDING
+                            <div 
+                                className="period-content-wrapper" 
+                                style={{ padding: "0 1.5rem 1.5rem 1.5rem", cursor: "pointer" }}
+                            >
+                              <CoinTable
+                                coins={periodGroup.coins}
+                                onCoinClick={onCoinClick}
+                              />
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -344,7 +446,7 @@ export default function CoinGallery({
           })}
         </div>
       ) : (
-        /* --- GRID MODE --- */
+        /* --- GRID MODE (Virtualized) --- */
         <div
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
@@ -355,11 +457,12 @@ export default function CoinGallery({
           {rowVirtualizer.getVirtualItems().map((virtualItem) => {
             const row = virtualRows[virtualItem.index];
             if (!row) return null;
-            const borderColor =
+
+            const groupColor =
               row.type === "header"
-                ? row.group.color.border
-                : groupedCoins.find((g) => g.id === row.groupId)?.color
-                    .border || "#e5e7eb";
+                ? row.group.color
+                : groupedCoins.find((g) => g.id === row.groupId)?.color;
+            const borderColor = groupColor ? groupColor.border : "#e5e7eb";
 
             return (
               <div
@@ -375,6 +478,7 @@ export default function CoinGallery({
                   }px)`,
                 }}
               >
+                {/* 1. CATEGORY HEADER */}
                 {row.type === "header" ? (
                   <div
                     className="category-section"
@@ -383,13 +487,12 @@ export default function CoinGallery({
                       borderTop: `1px solid ${borderColor}`,
                       borderLeft: `1px solid ${borderColor}`,
                       borderRight: `1px solid ${borderColor}`,
-                      borderBottom: expanded[row.group.id]
+                      borderBottom: expandedCategories[row.group.id]
                         ? "none"
                         : `1px solid ${borderColor}`,
-
                       marginTop: "24px",
                       marginBottom: 0,
-                      borderRadius: expanded[row.group.id]
+                      borderRadius: expandedCategories[row.group.id]
                         ? "12px 12px 0 0"
                         : "12px",
                       height: "70px",
@@ -399,9 +502,7 @@ export default function CoinGallery({
                     <div
                       className="category-header"
                       onClick={() => toggleCategory(row.group.id)}
-                      style={{
-                        borderBottom: "none",
-                      }}
+                      style={{ borderBottom: "none" }}
                     >
                       <div className="category-title">
                         <h2
@@ -419,7 +520,7 @@ export default function CoinGallery({
                         </span>
                       </div>
                       <button className="category-toggle">
-                        {expanded[row.group.id] ? (
+                        {expandedCategories[row.group.id] ? (
                           <ChevronUp size={20} />
                         ) : (
                           <ChevronDown size={20} />
@@ -427,9 +528,43 @@ export default function CoinGallery({
                       </button>
                     </div>
                   </div>
-                ) : (
+                ) : row.type === "subheader" ? (
+                  /* 2. PERIOD SUB-HEADER (Grid View) */
                   <div
-                    className="category-content virtual-row-container"
+                    className="period-row"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePeriod(row.periodId);
+                    }}
+                    style={{
+                      backgroundColor: "#fff",
+                      padding: "0 1.5rem",
+                      borderLeft: `1px solid ${borderColor}`,
+                      borderRight: `1px solid ${borderColor}`,
+                      borderTop: "none",
+                      borderBottom: row.isLastInGroup
+                        ? `1px solid ${borderColor}`
+                        : "none",
+                      borderRadius: row.isLastInGroup ? "0 0 12px 12px" : "0",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      boxSizing: "border-box",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <PeriodHeader
+                      title={row.title}
+                      count={row.count}
+                      ownedCount={row.ownedCount}
+                      isExpanded={row.isExpanded}
+                      borderColor={borderColor}
+                    />
+                  </div>
+                ) : (
+                  /* 3. COIN ROW */
+                  <div
+                    className="period-row virtual-row-container"
                     onClick={(e) => handleRowBackgroundClick(e, row.groupId)}
                     title="Click background to collapse category"
                     style={{
@@ -441,7 +576,6 @@ export default function CoinGallery({
                         ? `1px solid ${borderColor}`
                         : "none",
                       borderTop: "none",
-
                       borderRadius: row.isLast ? "0 0 12px 12px" : "0",
                       height: "100%",
                       display: "flex",

@@ -103,6 +103,17 @@ body {
   color: white;
 }
 
+/* Custom Logo Tweaks */
+.app-icon.custom-logo-bg {
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-dark) 100%
+  );
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .app-subtitle {
   display: flex;
   align-items: center;
@@ -248,6 +259,17 @@ body {
   margin-bottom: 0.5rem;
 }
 
+/* Custom Gold Accent for Filter Icons */
+.filter-label svg {
+  color: #d97706; /* Metallic Gold (Amber-600) */
+  filter: drop-shadow(0 1px 1px rgba(217, 119, 6, 0.2));
+  transition: color 0.2s ease;
+}
+
+.filter-group:hover .filter-label svg {
+  color: #b45309; /* Darker Gold */
+}
+
 .filter-select {
   width: 100%;
   padding: 0.625rem 0.75rem;
@@ -295,7 +317,7 @@ body {
   color: #ef4444;
 }
 
-/* Active Filters Bar (Container Style) */
+/* Active Filters Bar */
 .active-filters-bar {
   margin-top: 1.5rem;
   padding: 1rem 1.25rem;
@@ -448,7 +470,6 @@ body {
 .categories-container {
   display: flex;
   flex-direction: column;
-  /* removed gap to let virtualizer handle spacing */
 }
 
 .category-section {
@@ -460,7 +481,6 @@ body {
 }
 
 .category-header {
-  /* UPDATED: Remove vertical padding, let Flexbox center it in the fixed height */
   padding: 0 1.5rem;
   height: 100%;
   cursor: pointer;
@@ -513,7 +533,6 @@ body {
   justify-content: center;
 }
 
-/* Feedback for clickable category background */
 .category-content {
   padding: 1.5rem;
   background: rgb(255, 255, 255);
@@ -533,13 +552,11 @@ body {
 /* =========================================
      6. COIN CARD (3D FLIP & BADGES)
      ========================================= */
-
 .coin-card {
   background-color: transparent;
   perspective: 1000px;
-  cursor: default; /* Reset from grid pointer */
+  cursor: default;
   min-height: 350px;
-  /* Prevent layout shifts */
   position: relative;
 }
 
@@ -550,7 +567,7 @@ body {
   height: 100%;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
-  cursor: pointer; /* Restore pointer for flip */
+  cursor: pointer;
 }
 
 .coin-card:hover .card-flipper {
@@ -599,7 +616,6 @@ body {
 
 .coin-image-container {
   height: 220px;
-  /* UPDATED: Solid Gray for no-image state */
   background: var(--border-light);
   display: flex;
   align-items: center;
@@ -637,8 +653,6 @@ body {
   color: var(--text);
   margin-bottom: 0.75rem;
   line-height: 1.4;
-
-  /* Force single line with ellipsis */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -680,13 +694,13 @@ body {
   background: white;
   display: flex;
   flex-direction: column;
-  border-color: var(--primary); /* Default Border: Blue */
+  border-color: var(--primary);
   padding: 0;
   height: 100%;
 }
 
 .coin-card.owned-coin .card-back {
-  border-color: var(--owned-green); /* Owned Border: Green */
+  border-color: var(--owned-green);
 }
 
 .back-content-wrapper {
@@ -710,10 +724,9 @@ body {
 .no-reverse-placeholder {
   width: 100%;
   height: 100%;
-  /* Empty */
 }
 
-/* --- THE OVERLAY (Specific Selectors) --- */
+/* --- THE OVERLAY --- */
 .card-back-overlay {
   position: absolute;
   bottom: 0;
@@ -742,7 +755,7 @@ body {
   );
 }
 
-/* 2. Owned - GREEN Gradient (Override) */
+/* 2. Owned - GREEN Gradient */
 .coin-card.owned-coin .card-back-overlay {
   background: linear-gradient(
     to top,
@@ -862,7 +875,6 @@ body {
   font-weight: 600;
   color: var(--text);
   margin: 0;
-  /* Truncate long names */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -936,7 +948,6 @@ body {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Modal Details Grid (3-Column) */
 .coin-details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -970,11 +981,8 @@ body {
   margin-bottom: 0.85rem;
   font-size: 0.8rem;
   color: var(--text);
-
-  /* Flex Layout for Label vs Value */
   display: flex;
   align-items: center;
-
   border-bottom: 1px solid #e2e8f0;
   padding-bottom: 0.5rem;
   min-width: 0;
@@ -989,7 +997,7 @@ body {
 .detail-item strong {
   font-weight: 600;
   color: var(--text);
-  flex: 0 0 95px; /* Rigid width for alignment */
+  flex: 0 0 95px;
 }
 
 .detail-value {
@@ -1116,7 +1124,7 @@ body {
 }
 
 /* =========================================
-   10. VIRTUALIZATION & SKELETONS (NEW)
+   10. VIRTUALIZATION & SKELETONS
    ========================================= */
 
 /* The row container created by the virtualizer */
@@ -1124,19 +1132,16 @@ body {
   display: flex;
   gap: 1.5rem;
   width: 100%;
-  padding: 0 0.5rem; /* Slight buffer */
+  padding: 0 0.5rem;
   box-sizing: border-box;
 }
 
-/* Ensure cards inside the flex row take equal width */
 .virtual-row .coin-card {
   flex: 1;
-  /* Prevent cards from stretching weirdly if row is incomplete */
   max-width: 100%;
-  min-width: 0; /* Flexbox fix for text overflow */
+  min-width: 0;
 }
 
-/* Fill empty space in incomplete rows (e.g. 3 items in a 4-item row) */
 .virtual-spacer {
   flex: 1;
 }
@@ -1182,77 +1187,34 @@ body {
   border-radius: 4px;
 }
 
-/* Image Fade-in Utility */
-.coin-image {
-  transition: opacity 0.3s ease-in-out;
-}
-
 /* =========================================
-   11. UTILITIES (NEW)
+   11. UTILITIES & PERFORMANCE
    ========================================= */
 
-/* Hide scrollbar for Chrome, Safari and Opera */
+/* Hide scrollbar */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
-
-/* Hide scrollbar for IE, Edge and Firefox */
 .hide-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Add pointer cursor to virtual rows to indicate clickability */
 .virtual-row-container {
   cursor: pointer;
 }
 
-/* Ensure the hover effect from the original design persists on rows */
 .virtual-row-container:hover {
   background-color: rgb(255, 255, 255) !important;
 }
-
-/* =========================================
-   11. PERFORMANCE UTILITIES
-   ========================================= */
 
 /* Image Fade In Logic */
 .coin-image {
   opacity: 0;
   transition: opacity 0.4s ease-in-out;
 }
-
-/* When the image loads, we set opacity to 1 via inline style or class */
 .coin-image.loaded {
   opacity: 1;
-}
-
-/* =========================================
-   12. BRANDING UPDATES
-   ========================================= */
-
-/* 1. Custom Gold Accent for Filter Icons */
-.filter-label svg {
-  color: #d97706; /* Metallic Gold (Amber-600) */
-  filter: drop-shadow(0 1px 1px rgba(217, 119, 6, 0.2)); /* Subtle depth */
-  transition: color 0.2s ease;
-}
-
-/* Optional: Make them shine brighter on hover */
-.filter-group:hover .filter-label svg {
-  color: #b45309; /* Darker Gold (Amber-700) */
-}
-
-/* 2. Custom Logo Tweaks */
-.app-icon.custom-logo-bg {
-  /* You can keep the original primary color, or switch to a "Royal" blue/purple */
-  background: linear-gradient(
-    135deg,
-    var(--primary) 0%,
-    var(--primary-dark) 100%
-  );
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* =========================================
@@ -1311,8 +1273,6 @@ body {
   position: sticky;
   top: 0;
   z-index: 5;
-
-  /* Typography Update */
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1336,7 +1296,7 @@ body {
 
 /* Cells */
 .coin-matrix-table td {
-  padding: 0; /* Reset padding for flex container */
+  padding: 0;
   border-bottom: 1px solid var(--border-light);
   border-right: 1px solid var(--border-light);
   text-align: center;
@@ -1346,10 +1306,10 @@ body {
 
 /* --- CELL BACKGROUND STATES --- */
 .matrix-cell.owned-cell {
-  background-color: #f0fdf4; /* All Owned: Light Green */
+  background-color: #f0fdf4;
 }
 .matrix-cell.mixed-cell {
-  background-color: #fffbeb; /* Mixed: Light Yellow/Gold */
+  background-color: #fffbeb;
 }
 .matrix-cell.unowned-cell:hover,
 .matrix-cell.owned-cell:hover,
@@ -1377,14 +1337,14 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  min-width: 40px; /* Ensure clickable area */
-  border: 1px solid transparent; /* Prevent jump on border add */
+  min-width: 40px;
+  border: 1px solid transparent;
 }
 
 /* Highlight & Dim States */
 .coin-item-wrapper.series-highlight {
-  background-color: #fef9c3; /* Light Yellow */
-  border: 1px solid #facc15; /* Yellow-400 */
+  background-color: #fef9c3;
+  border: 1px solid #facc15;
   z-index: 2;
 }
 
@@ -1412,7 +1372,7 @@ body {
   color: #cbd5e1;
 }
 
-/* Separator Line (between multiple coins) */
+/* Separator Line */
 .coin-separator {
   position: absolute;
   left: 0;
@@ -1426,9 +1386,8 @@ body {
 .cell-denom-label {
   font-size: 0.65rem;
   font-weight: 700;
-  /* Typography Update: Normal Case */
   text-transform: none;
-  color: var(--text-light); /* Default gray */
+  color: var(--text-light);
   line-height: 1;
   max-width: 80px;
   white-space: nowrap;
@@ -1466,7 +1425,7 @@ body {
   );
   border-radius: var(--radius-sm);
   padding: 0.75rem;
-  pointer-events: none; /* Let clicks pass through */
+  pointer-events: none;
   min-width: 200px;
   max-width: 250px;
   animation: fadeIn 0.15s ease-out;
@@ -1519,4 +1478,41 @@ body {
   font-size: 0.6rem;
   color: var(--text-light);
   border: 1px solid var(--border-light);
+}
+
+/* =========================================
+   15. UNIFIED HEADER STYLES (GRID & TABLE)
+   ========================================= */
+
+/* --- PERIOD ROW WRAPPER --- 
+   This class is now used in both Grid and Table views to wrap the header/content rows.
+   It provides the uniform hover effect.
+*/
+.period-row {
+  transition: background-color 0.1s;
+}
+
+.period-row:hover {
+  background-color: #f8fafc !important; /* Slight gray on hover */
+}
+
+/* --- PERIOD HEADER CONTENT --- */
+.period-chevron {
+  color: var(--text-light);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+/* Reusing existing classes for typography consistency */
+.period-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #475569;
+  margin: 0;
+  padding-left: 0.75rem;
+  /* Border color is dynamic and handled inline */
 }
