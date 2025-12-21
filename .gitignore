@@ -1,0 +1,13 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Production
+build
+dist
+
+# Environment variables (Safety!)
+.env
+.env.local
+.DS_Store
