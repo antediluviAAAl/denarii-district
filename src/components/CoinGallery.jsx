@@ -20,7 +20,6 @@ const CATEGORY_COLORS = [
 ];
 
 // --- SHARED COMPONENT: PERIOD HEADER ---
-// Pure content component. Layout/Spacing is handled by the wrapper.
 const PeriodHeader = ({
   title,
   count,
@@ -143,8 +142,11 @@ export default function CoinGallery({
   };
 
   const [collapsedPeriods, setCollapsedPeriods] = useState({});
-  const togglePeriod = (id) => {
-    setCollapsedPeriods((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  // FIX: Accept both IDs to create a unique key per category-period combo
+  const togglePeriod = (categoryId, periodId) => {
+    const key = `${categoryId}-${periodId}`;
+    setCollapsedPeriods((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   // --- HELPER: Group Coins by Period ---
@@ -183,9 +185,14 @@ export default function CoinGallery({
         const periodGroups = getCoinsByPeriod(group.coins);
 
         periodGroups.forEach((period, pIndex) => {
-          const isPeriodExpanded = !collapsedPeriods[period.id];
+          // FIX: Check state using the unique compound key
+          const uniqueKey = `${group.id}-${period.id}`;
+          const isPeriodExpanded = !collapsedPeriods[uniqueKey];
+
           const isLastPeriod = pIndex === periodGroups.length - 1;
-          const periodOwnedCount = period.coins.filter((c) => c.is_owned).length;
+          const periodOwnedCount = period.coins.filter(
+            (c) => c.is_owned
+          ).length;
           const isLastVisualElement = isLastPeriod && !isPeriodExpanded;
 
           // 2. Period Subheader Row
@@ -241,14 +248,11 @@ export default function CoinGallery({
 
   // --- BACKGROUND CLICK HANDLER (COLLAPSE LOGIC) ---
   const handleRowBackgroundClick = (e, groupId) => {
-    // We check if the clicked element is one of our "background" containers.
-    // This allows clicks on whitespace to collapse the category, 
-    // while clicks on interactive elements (buttons, inputs) work normally.
     if (
       e.target === e.currentTarget ||
       e.target.classList.contains("virtual-row") ||
       e.target.classList.contains("virtual-spacer") ||
-      e.target.classList.contains("period-row") || 
+      e.target.classList.contains("period-row") ||
       e.target.classList.contains("category-content") ||
       e.target.classList.contains("period-group") ||
       e.target.classList.contains("period-content-wrapper")
@@ -378,14 +382,14 @@ export default function CoinGallery({
                     title="Click background to collapse category"
                     style={{
                       // REMOVED PADDING: Allows headers to go edge-to-edge
-                      padding: "0", 
+                      padding: "0",
                       backgroundColor: "white",
                       borderLeft: `1px solid ${group.color.border}`,
                       borderRight: `1px solid ${group.color.border}`,
                       borderBottom: `1px solid ${group.color.border}`,
                       borderTop: "none",
                       borderRadius: "0 0 12px 12px",
-                      overflow: "hidden", 
+                      overflow: "hidden",
                       cursor: "pointer",
                     }}
                   >
@@ -394,7 +398,10 @@ export default function CoinGallery({
                       const periodOwnedCount = periodGroup.coins.filter(
                         (c) => c.is_owned
                       ).length;
-                      const isPeriodExpanded = !collapsedPeriods[periodGroup.id];
+
+                      // FIX: Check state using compound key
+                      const uniqueKey = `${group.id}-${periodGroup.id}`;
+                      const isPeriodExpanded = !collapsedPeriods[uniqueKey];
 
                       return (
                         <div
@@ -403,32 +410,38 @@ export default function CoinGallery({
                           style={{ cursor: "default" }}
                         >
                           {/* TABLE HEADER WRAPPER */}
-                          <div 
+                          <div
                             className="period-row"
-                            onClick={() => togglePeriod(periodGroup.id)}
+                            // FIX: Pass both IDs
+                            onClick={() =>
+                              togglePeriod(group.id, periodGroup.id)
+                            }
                             style={{
-                                padding: "0 1.5rem", 
-                                height: "50px",
-                                display: "flex",
-                                alignItems: "center",
-                                cursor: "pointer",
-                                backgroundColor: "white",
+                              padding: "0 1.5rem",
+                              height: "50px",
+                              display: "flex",
+                              alignItems: "center",
+                              cursor: "pointer",
+                              backgroundColor: "white",
                             }}
                           >
                             <PeriodHeader
-                                title={periodGroup.name}
-                                count={periodGroup.coins.length}
-                                ownedCount={periodOwnedCount}
-                                isExpanded={isPeriodExpanded}
-                                borderColor={group.color.border}
+                              title={periodGroup.name}
+                              count={periodGroup.coins.length}
+                              ownedCount={periodOwnedCount}
+                              isExpanded={isPeriodExpanded}
+                              borderColor={group.color.border}
                             />
                           </div>
 
                           {isPeriodExpanded && (
                             // WRAPPER FOR CONTENT TO RESTORE PADDING
-                            <div 
-                                className="period-content-wrapper" 
-                                style={{ padding: "0 1.5rem 1.5rem 1.5rem", cursor: "pointer" }}
+                            <div
+                              className="period-content-wrapper"
+                              style={{
+                                padding: "0 1.5rem 1.5rem 1.5rem",
+                                cursor: "pointer",
+                              }}
                             >
                               <CoinTable
                                 coins={periodGroup.coins}
@@ -532,9 +545,10 @@ export default function CoinGallery({
                   /* 2. PERIOD SUB-HEADER (Grid View) */
                   <div
                     className="period-row"
+                    // FIX: Pass both IDs using row data
                     onClick={(e) => {
                       e.stopPropagation();
-                      togglePeriod(row.periodId);
+                      togglePeriod(row.groupId, row.periodId);
                     }}
                     style={{
                       backgroundColor: "#fff",
