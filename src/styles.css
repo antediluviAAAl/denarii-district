@@ -1509,5 +1509,10 @@ body {
 
 /* Reusing existing classes for typography consistency */
 .period-title {
-  /* Dynamic border color handled inline */
+  font-size: 1rem;
+  font-weight: 700;
+  color: #475569;
+  margin: 0;
+  padding-left: 0.75rem;
+  /* Border color is dynamic and handled inline */
 }
