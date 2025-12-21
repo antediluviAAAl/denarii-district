@@ -1,6 +1,7 @@
 import { X, CheckCircle, ExternalLink, AlertCircle } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
+import FadeInImage from "./FadeInImage";
 
 // Fetcher Function
 async function fetchCoinDetails(coinId) {
@@ -43,9 +44,7 @@ export default function CoinModal({ coin, onClose }) {
     staleTime: 1000 * 60 * 30, // Keep details cached for 30 mins
   });
 
-  // Merge Data:
-  // We prioritize 'details' (full fetch) over 'coin' (summary) to ensure nested objects
-  // like d_series aren't overwritten by partial data that lacks links.
+  // Merge Data
   const displayData = details ? { ...coin, ...details } : coin;
 
   // Explicitly ensure the Owned Status and Images from the parent (which has the cache) are preserved
@@ -101,7 +100,7 @@ export default function CoinModal({ coin, onClose }) {
                 {displayData.display_obverse && (
                   <div className="coin-image-modal">
                     <h3>Obverse</h3>
-                    <img
+                    <FadeInImage
                       src={displayData.display_obverse}
                       className="modal-image"
                       alt="Obverse"
@@ -111,7 +110,7 @@ export default function CoinModal({ coin, onClose }) {
                 {displayData.display_reverse && (
                   <div className="coin-image-modal">
                     <h3>Reverse</h3>
-                    <img
+                    <FadeInImage
                       src={displayData.display_reverse}
                       className="modal-image"
                       alt="Reverse"

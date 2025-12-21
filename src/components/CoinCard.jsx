@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import { Calendar, DollarSign, Hash, Eye } from "lucide-react";
+import FadeInImage from "./FadeInImage";
 
 const CoinCard = memo(function CoinCard({ coin, onClick }) {
   const obverseUrl = coin.display_obverse;
@@ -22,16 +23,12 @@ const CoinCard = memo(function CoinCard({ coin, onClick }) {
           <div className="coin-card-inner">
             <div className="coin-image-container">
               {obverseUrl ? (
-                // CSS-Based Image Loading (No State)
-                <img
+                <FadeInImage
                   src={obverseUrl}
                   alt={coin.name}
-                  className="coin-image fade-in-image"
-                  loading="lazy"
-                  onLoad={(e) => (e.target.style.opacity = 1)}
+                  className="coin-image"
                 />
               ) : (
-                // Clean Grey Placeholder (No Icon)
                 <div className="coin-image-placeholder" />
               )}
             </div>
@@ -67,11 +64,10 @@ const CoinCard = memo(function CoinCard({ coin, onClick }) {
         <div className="card-back">
           <div className="back-content-wrapper">
             {reverseUrl ? (
-              <img
+              <FadeInImage
                 src={reverseUrl}
                 alt={`${coin.name} Reverse`}
                 className="coin-image-full"
-                loading="lazy"
               />
             ) : (
               <div className="no-reverse-placeholder"></div>

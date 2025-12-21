@@ -78,23 +78,12 @@ export default function CoinGallery({
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [coins, categories]);
 
-  // Expand/Collapse State
-  const [expanded, setExpanded] = useState(() => ({}));
-  useEffect(() => {
-    if (groupedCoins.length > 0) {
-      setExpanded((prev) => {
-        const next = { ...prev };
-        let changed = false;
-        groupedCoins.forEach((g) => {
-          if (next[g.id] === undefined) {
-            next[g.id] = true;
-            changed = true;
-          }
-        });
-        return changed ? next : prev;
-      });
-    }
-  }, [groupedCoins.length]);
+  // --- EXPAND/COLLAPSE STATE ---
+  // Default is empty object {}.
+  // In our logic, undefined means "Collapsed".
+  // Clicking toggle sets it to true (Expanded).
+  // This satisfies the requirement for "Start Collapsed" in both Grid and Table.
+  const [expanded, setExpanded] = useState({});
 
   const toggleCategory = (id) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -160,7 +149,6 @@ export default function CoinGallery({
       }
     });
 
-    // SORT: Descending by Start Year
     return Object.values(periodMap).sort((a, b) => b.startYear - a.startYear);
   };
 
@@ -223,9 +211,6 @@ export default function CoinGallery({
         /* --- TABLE MODE --- */
         <div className="tables-layout">
           {groupedCoins.map((group) => {
-            const periods = getCoinsByPeriod(group.coins);
-            if (periods.length === 0) return null;
-
             const catOwnedCount = group.coins.filter((c) => c.is_owned).length;
             const isExpanded = expanded[group.id];
 
@@ -245,11 +230,9 @@ export default function CoinGallery({
                   onClick={() => toggleCategory(group.id)}
                   style={{
                     backgroundColor: group.color.bg,
-                    // FIX: Explicitly set border sides instead of shorthand
                     borderTop: `1px solid ${group.color.border}`,
                     borderLeft: `1px solid ${group.color.border}`,
                     borderRight: `1px solid ${group.color.border}`,
-                    // FIX: Conditionally set Bottom based on expansion state
                     borderBottom: isExpanded
                       ? "none"
                       : `1px solid ${group.color.border}`,
@@ -293,12 +276,13 @@ export default function CoinGallery({
                       borderLeft: `1px solid ${group.color.border}`,
                       borderRight: `1px solid ${group.color.border}`,
                       borderBottom: `1px solid ${group.color.border}`,
-                      borderTop: "none", // Seamless connection
+                      borderTop: "none",
                       borderRadius: "0 0 12px 12px",
                       cursor: "pointer",
                     }}
                   >
-                    {periods.map((periodGroup) => {
+                    {/* Only calculate periods if we are actually rendering (Perf Boost) */}
+                    {getCoinsByPeriod(group.coins).map((periodGroup) => {
                       const periodOwnedCount = periodGroup.coins.filter(
                         (c) => c.is_owned
                       ).length;
@@ -396,7 +380,6 @@ export default function CoinGallery({
                     className="category-section"
                     style={{
                       backgroundColor: row.group.color.bg,
-                      // FIX: Explicitly set border sides for consistency
                       borderTop: `1px solid ${borderColor}`,
                       borderLeft: `1px solid ${borderColor}`,
                       borderRight: `1px solid ${borderColor}`,
@@ -457,7 +440,6 @@ export default function CoinGallery({
                       borderBottom: row.isLast
                         ? `1px solid ${borderColor}`
                         : "none",
-                      // Seamless top connection
                       borderTop: "none",
 
                       borderRadius: row.isLast ? "0 0 12px 12px" : "0",
