@@ -20,19 +20,26 @@ export default function Header({
             <span className="title-denarii">Denarii</span>
             <span className="title-district"> District</span>
           </h1>
-          <p className="app-subtitle">
-            <Database size={16} />
-            <span>{totalCoins.toLocaleString()} coins in database</span>
+          <div className="app-subtitle">
+            {/* Icon is gold */}
+            <Database size={16} className="text-gold" />
+
+            {/* Text is standard color (inherited), font weight is bold */}
+            <span style={{ fontWeight: 600 }}>
+              {totalCoins.toLocaleString()} coins in database
+            </span>
+
             <span className="owned-count">
               <CheckCircle size={14} />
               {ownedCount} owned
             </span>
-          </p>
+          </div>
         </div>
 
         <div className="header-stats">
           <div className="stat-badge">
             <span className="stat-label">Showing</span>
+            {/* Value uses the gold text class */}
             <span className="stat-value">{displayCount}</span>
           </div>
         </div>

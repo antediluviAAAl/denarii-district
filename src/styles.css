@@ -7,7 +7,7 @@
   --primary-dark: #1d4ed8;
   --secondary: #7c3aed;
 
-  /* NEW: Brand Gold (Matches the #d97706 used in filters) */
+  /* Brand Gold */
   --brand-gold: #d97706;
 
   /* Backgrounds */
@@ -51,9 +51,14 @@ body {
   line-height: 1.5;
 }
 
+/* --- UTILITIES --- */
+.text-gold {
+  color: var(--brand-gold) !important;
+}
+
 /* =========================================
-     2. LAYOUT & HEADER
-     ========================================= */
+       2. LAYOUT & HEADER
+       ========================================= */
 .app-container {
   min-height: 100vh;
   display: flex;
@@ -84,31 +89,26 @@ body {
   gap: 0.5rem;
 }
 
-/* UPDATED: Container for the Logo and Title */
 .app-title {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  /* Apply the font family here, specific sizes are handled in children classes */
-  font-family: 'Cinzel', serif;
+  font-family: "Cinzel", serif;
 }
 
-/* NEW: Style for "Denarii" */
 .title-denarii {
   font-size: 2rem;
   font-weight: 500;
   color: var(--brand-gold);
 }
 
-/* NEW: Style for " District" */
 .title-district {
   font-size: 1.8rem;
   font-weight: 500;
-  color: #111827; /* Standard dark text */
+  color: #111827;
 }
 
 .app-icon {
-  /* Removed standard blue background to let the SVG shine */
   background: transparent;
   padding: 0;
   display: flex;
@@ -134,8 +134,9 @@ body {
   background: var(--owned-green-light);
   color: var(--owned-green-dark);
   border-radius: 12px;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.8rem;
+  margin-left: 0.5rem;
 }
 
 .owned-count svg {
@@ -168,12 +169,12 @@ body {
 .stat-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--brand-gold);
 }
 
 /* =========================================
-     3. CONTROLS (SEARCH & FILTERS)
-     ========================================= */
+       3. CONTROLS (SEARCH & FILTERS)
+       ========================================= */
 .controls-container {
   max-width: 1400px;
   margin: 0 auto 2rem;
@@ -181,9 +182,29 @@ body {
   padding: 0 1.5rem;
 }
 
+/* Row 1: Inputs */
+.filter-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+/* Row 2: Status & Toggles */
+.filter-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  min-height: 46px; /* Matches fixed height of children */
+}
+
 /* Search Box */
 .search-box {
-  margin-bottom: 1.5rem;
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0;
 }
 
 .search-input-wrapper {
@@ -192,17 +213,16 @@ body {
   align-items: center;
 }
 
-/* UPDATED: Gold Search Icon */
 .search-icon {
   position: absolute;
   left: 1rem;
-  color: var(--brand-gold); /* Updated to Gold */
+  color: var(--brand-gold);
   pointer-events: none;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.75rem 3rem 0.75rem 2.5rem;
+  padding: 0.625rem 3rem 0.625rem 0.75rem;
   font-size: 0.875rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -237,17 +257,10 @@ body {
   background: var(--border-light);
 }
 
-/* Filter Row */
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-end;
-}
-
+/* Filter Groups */
 .filter-group {
   flex: 1;
-  min-width: 180px;
+  min-width: 160px;
 }
 
 .filter-label {
@@ -262,7 +275,6 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* UPDATED: Ensure filter labels use the new gold variable */
 .filter-label svg {
   color: var(--brand-gold);
   filter: drop-shadow(0 1px 1px rgba(217, 119, 6, 0.2));
@@ -270,7 +282,7 @@ body {
 }
 
 .filter-group:hover .filter-label svg {
-  color: #b45309; /* Darker Gold */
+  color: #b45309;
 }
 
 .filter-select {
@@ -298,41 +310,21 @@ body {
   cursor: not-allowed;
 }
 
-.clear-filters-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-light);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  font-family: inherit;
-}
-
-.clear-filters-btn:hover {
-  background: #fef2f2;
-  border-color: #ef4444;
-  color: #ef4444;
-}
-
 /* Active Filters Bar */
 .active-filters-bar {
-  margin-top: 1.5rem;
-  padding: 1rem 1.25rem;
-  background-color: white;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  /* UPDATED: Fixed height + No Wrap = No Size Jump */
+  flex-wrap: nowrap;
   gap: 1rem;
-  animation: slideDown 0.2s ease-out;
+  flex: 1;
+  background-color: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  padding: 0 1rem; /* Padding X only, Y handled by flex/height */
+  height: 46px; /* Fixed Height */
+  overflow: hidden; /* Prevent vertical expansion */
 }
 
 .active-filters-label {
@@ -346,13 +338,26 @@ body {
   letter-spacing: 0.05em;
   padding-right: 1rem;
   border-right: 1px solid var(--border-light);
+  flex-shrink: 0;
+  height: 100%; /* Full height to center divider */
 }
 
+/* UPDATED: Horizontal Scroll for Tags */
 .filter-tags-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
   flex: 1;
+  overflow-x: auto; /* Horizontal Scroll */
+  overflow-y: hidden;
+  align-items: center;
+  height: 100%;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+.filter-tags-list::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .filter-tag {
@@ -369,6 +374,8 @@ body {
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
+  white-space: nowrap; /* Prevent tag text wrapping */
+  flex-shrink: 0; /* Prevent tag shrinking */
 }
 
 .filter-tag:hover {
@@ -395,29 +402,57 @@ body {
   font-size: 0.8rem;
   text-decoration: underline;
   cursor: pointer;
-  margin-left: auto;
+  margin-left: auto; /* Pushes it to end of scroll area */
   padding: 0.25rem;
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .clear-all-tags:hover {
   color: #ef4444;
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* View Toggles */
+.view-toggles {
+  display: flex;
+  gap: 4px;
+  background: white;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  height: 46px; /* Match filter bar height */
+  align-items: center;
+}
+
+.toggle-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  color: #64748b;
+  transition: all 0.2s;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* UPDATED: Grey-ish Background + Gold Icon */
+.toggle-btn.active {
+  background: #f1f5f9; /* Slate 100 */
+  color: var(--brand-gold);
+  font-weight: bold;
+}
+
+.toggle-btn:hover {
+  background: #f1f5f9;
 }
 
 /* =========================================
-     4. MAIN CONTENT AREA
-     ========================================= */
+       4. MAIN CONTENT AREA
+       ========================================= */
 .main-content {
   flex: 1;
   max-width: 1400px;
@@ -468,8 +503,8 @@ body {
 }
 
 /* =========================================
-     5. CATEGORIES & GRID
-     ========================================= */
+       5. CATEGORIES & GRID
+       ========================================= */
 .categories-container {
   display: flex;
   flex-direction: column;
@@ -514,13 +549,13 @@ body {
   background: rgba(255, 255, 255, 0.7);
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  font-weight: 500;
+  font-weight: 600;
   color: inherit;
 }
 
 .owned-in-category {
   color: var(--owned-green-dark);
-  font-weight: 500;
+  font-weight: 600;
   margin-left: 0.5rem;
 }
 
@@ -553,8 +588,8 @@ body {
 }
 
 /* =========================================
-     6. COIN CARD (3D FLIP & BADGES)
-     ========================================= */
+       6. COIN CARD (3D FLIP & BADGES)
+       ========================================= */
 .coin-card {
   background-color: transparent;
   perspective: 1000px;
@@ -678,7 +713,6 @@ body {
   color: var(--text-light);
 }
 
-/* UPDATED: Target icons inside coin card info items to be Gold */
 .coin-info-item svg {
   color: var(--brand-gold);
 }
@@ -812,8 +846,8 @@ body {
 }
 
 /* =========================================
-     7. MODAL
-     ========================================= */
+       7. MODAL
+       ========================================= */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1061,8 +1095,8 @@ body {
 }
 
 /* =========================================
-     8. FOOTER
-     ========================================= */
+       8. FOOTER
+       ========================================= */
 .app-footer {
   padding: 1.5rem;
   text-align: center;
@@ -1074,8 +1108,8 @@ body {
 }
 
 /* =========================================
-     9. RESPONSIVE UTILITIES
-     ========================================= */
+       9. RESPONSIVE UTILITIES
+       ========================================= */
 @media (max-width: 850px) {
   .coin-details-grid.three-col {
     grid-template-columns: 1fr;
@@ -1091,11 +1125,20 @@ body {
     gap: 1rem;
     align-items: flex-start;
   }
-  .filter-row {
+  .filter-input-row {
     flex-direction: column;
+    align-items: stretch;
   }
   .filter-group {
     min-width: 100%;
+  }
+  .filter-status-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .view-toggles {
+    align-self: flex-start;
   }
   .coin-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -1132,8 +1175,8 @@ body {
 }
 
 /* =========================================
-   10. VIRTUALIZATION & SKELETONS
-   ========================================= */
+     10. VIRTUALIZATION & SKELETONS
+     ========================================= */
 
 /* The row container created by the virtualizer */
 .virtual-row {
@@ -1196,8 +1239,8 @@ body {
 }
 
 /* =========================================
-   11. UTILITIES & PERFORMANCE
-   ========================================= */
+     11. UTILITIES & PERFORMANCE
+     ========================================= */
 
 /* Hide scrollbar */
 .hide-scrollbar::-webkit-scrollbar {
@@ -1226,27 +1269,8 @@ body {
 }
 
 /* =========================================
-   13. COIN TABLE VIEW (MULTI-COIN SUPPORT)
-   ========================================= */
-
-/* Toggle Buttons */
-.toggle-btn {
-  padding: 6px 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: transparent;
-  color: #64748b;
-  transition: all 0.2s;
-}
-.toggle-btn.active {
-  background: #eff6ff;
-  color: #2563eb;
-  font-weight: bold;
-}
-.toggle-btn:hover {
-  background: #f1f5f9;
-}
+     13. COIN TABLE VIEW (MULTI-COIN SUPPORT)
+     ========================================= */
 
 /* Table Wrapper */
 .coin-table-wrapper {
@@ -1419,8 +1443,8 @@ body {
 }
 
 /* =========================================
-   14. COIN HOVER TOOLTIP
-   ========================================= */
+     14. COIN HOVER TOOLTIP
+     ========================================= */
 .coin-hover-tooltip {
   position: fixed;
   z-index: 9999;
@@ -1489,22 +1513,17 @@ body {
 }
 
 /* =========================================
-   15. UNIFIED HEADER STYLES (GRID & TABLE)
-   ========================================= */
+     15. UNIFIED HEADER STYLES (GRID & TABLE)
+     ========================================= */
 
-/* --- PERIOD ROW WRAPPER --- 
-   This class is now used in both Grid and Table views to wrap the header/content rows.
-   It provides the uniform hover effect.
-*/
 .period-row {
   transition: background-color 0.1s;
 }
 
 .period-row:hover {
-  background-color: #f8fafc !important; /* Slight gray on hover */
+  background-color: #f8fafc !important;
 }
 
-/* --- PERIOD HEADER CONTENT --- */
 .period-chevron {
   color: var(--text-light);
   width: 20px;
@@ -1515,12 +1534,10 @@ body {
   transition: transform 0.2s ease;
 }
 
-/* Reusing existing classes for typography consistency */
 .period-title {
   font-size: 1rem;
   font-weight: 700;
   color: #475569;
   margin: 0;
   padding-left: 0.75rem;
-  /* Border color is dynamic and handled inline */
 }

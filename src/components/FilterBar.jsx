@@ -6,9 +6,17 @@ import {
   Calendar,
   SortAsc,
   Tag,
+  LayoutGrid,
+  Table as TableIcon,
 } from "lucide-react";
 
-export default function FilterBar({ filters, setFilters, metadata, viewMode }) {
+export default function FilterBar({
+  filters,
+  setFilters,
+  metadata,
+  viewMode,
+  setViewMode,
+}) {
   // Helper to update specific filters
   const updateFilter = (key, value) => {
     setFilters((prev) => {
@@ -79,31 +87,34 @@ export default function FilterBar({ filters, setFilters, metadata, viewMode }) {
 
   return (
     <div className="controls-container">
-      {/* Search Box */}
-      <div className="search-box">
-        <div className="search-input-wrapper">
-          {/* UPDATED: Size set to 20 to be a tad smaller */}
-          <Search className="search-icon" size={20} />
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search coins by name, subject, or KM#..."
-            value={filters.search}
-            onChange={(e) => updateFilter("search", e.target.value)}
-          />
-          {filters.search && (
-            <button
-              className="clear-search"
-              onClick={() => updateFilter("search", "")}
-            >
-              <X size={18} />
-            </button>
-          )}
+      {/* ROW 1: INPUTS (Search + Selects) */}
+      <div className="filter-input-row">
+        {/* Search Box */}
+        <div className="search-box">
+          <label className="filter-label">
+            <Search size={16} /> Search
+          </label>
+          <div className="search-input-wrapper">
+            {/* UPDATED: Icon removed from here */}
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Find coins by name, subject, or KM#..."
+              value={filters.search}
+              onChange={(e) => updateFilter("search", e.target.value)}
+            />
+            {filters.search && (
+              <button
+                className="clear-search"
+                onClick={() => updateFilter("search", "")}
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Main Filter Dropdowns */}
-      <div className="filter-row">
+        {/* Filter Dropdowns */}
         <div className="filter-group">
           <label className="filter-label">
             <CheckCircle size={16} /> Show
@@ -163,7 +174,7 @@ export default function FilterBar({ filters, setFilters, metadata, viewMode }) {
             className="filter-select"
             value={filters.sortBy}
             onChange={(e) => updateFilter("sortBy", e.target.value)}
-            disabled={viewMode === "table"} // Disable in Table View
+            disabled={viewMode === "table"}
             title={
               viewMode === "table" ? "Sorting is automatic in Table View" : ""
             }
@@ -175,31 +186,53 @@ export default function FilterBar({ filters, setFilters, metadata, viewMode }) {
         </div>
       </div>
 
-      {/* Active Filter Tags Bar */}
-      {hasFilters && (
+      {/* ROW 2: STATUS & TOGGLES */}
+      <div className="filter-status-row">
+        {/* Left: Active Tags - UPDATED to always render container */}
         <div className="active-filters-bar">
           <div className="active-filters-label">
-            <Tag size={14} /> Active Filters:
+            <Tag size={14} className="text-gold" /> Active Filters:
           </div>
-          <div className="filter-tags-list">
-            {activeTags.map((tag) => (
-              <button
-                key={tag.key}
-                className="filter-tag"
-                onClick={tag.action}
-                title="Click to remove filter"
-              >
-                <span>{tag.label}</span>
-                <X size={14} />
-              </button>
-            ))}
 
-            <button className="clear-all-tags" onClick={clearAllFilters}>
-              Clear All
-            </button>
-          </div>
+          {hasFilters && (
+            <div className="filter-tags-list">
+              {activeTags.map((tag) => (
+                <button
+                  key={tag.key}
+                  className="filter-tag"
+                  onClick={tag.action}
+                  title="Click to remove filter"
+                >
+                  <span>{tag.label}</span>
+                  <X size={14} />
+                </button>
+              ))}
+
+              <button className="clear-all-tags" onClick={clearAllFilters}>
+                Clear All
+              </button>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right: View Toggles */}
+        <div className="view-toggles">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`toggle-btn ${viewMode === "grid" ? "active" : ""}`}
+            title="Grid View"
+          >
+            <LayoutGrid size={20} />
+          </button>
+          <button
+            onClick={() => setViewMode("table")}
+            className={`toggle-btn ${viewMode === "table" ? "active" : ""}`}
+            title="Table View"
+          >
+            <TableIcon size={20} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

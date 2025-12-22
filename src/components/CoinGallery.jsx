@@ -2,8 +2,6 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import {
   ChevronDown,
   ChevronUp,
-  LayoutGrid,
-  Table as TableIcon,
 } from "lucide-react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "../hooks/useWindowSize";
@@ -33,7 +31,7 @@ const PeriodHeader = ({
         display: "flex",
         alignItems: "center",
         width: "100%",
-        height: "100%", // Fill the wrapper
+        height: "100%",
         userSelect: "none",
       }}
     >
@@ -61,6 +59,7 @@ const PeriodHeader = ({
         {title}
       </h3>
 
+      {/* UPDATED: Split spans for gold styling */}
       <span
         className="category-count"
         style={{
@@ -69,7 +68,7 @@ const PeriodHeader = ({
           marginLeft: "1rem",
         }}
       >
-        {count} coins
+        <span className="text-gold">{count} coins</span>
         <span className="owned-in-category">• {ownedCount} owned</span>
       </span>
     </div>
@@ -143,7 +142,6 @@ export default function CoinGallery({
 
   const [collapsedPeriods, setCollapsedPeriods] = useState({});
 
-  // FIX: Accept both IDs to create a unique key per category-period combo
   const togglePeriod = (categoryId, periodId) => {
     const key = `${categoryId}-${periodId}`;
     setCollapsedPeriods((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -178,14 +176,12 @@ export default function CoinGallery({
     const rows = [];
 
     groupedCoins.forEach((group) => {
-      // 1. Category Header
       rows.push({ type: "header", group });
 
       if (expandedCategories[group.id]) {
         const periodGroups = getCoinsByPeriod(group.coins);
 
         periodGroups.forEach((period, pIndex) => {
-          // FIX: Check state using the unique compound key
           const uniqueKey = `${group.id}-${period.id}`;
           const isPeriodExpanded = !collapsedPeriods[uniqueKey];
 
@@ -195,7 +191,6 @@ export default function CoinGallery({
           ).length;
           const isLastVisualElement = isLastPeriod && !isPeriodExpanded;
 
-          // 2. Period Subheader Row
           rows.push({
             type: "subheader",
             title: period.name,
@@ -208,7 +203,6 @@ export default function CoinGallery({
           });
 
           if (isPeriodExpanded) {
-            // 3. Coin Rows
             for (let i = 0; i < period.coins.length; i += columns) {
               const isLastRowInPeriod = i + columns >= period.coins.length;
               const isLastRowInGroup = isLastPeriod && isLastRowInPeriod;
@@ -238,15 +232,14 @@ export default function CoinGallery({
     count: virtualRows.length,
     estimateSize: (index) => {
       const row = virtualRows[index];
-      if (row.type === "header") return 94; // Category Header
-      if (row.type === "subheader") return 50; // Period Header (Fixed Height)
-      return 380; // Coin Row
+      if (row.type === "header") return 94; 
+      if (row.type === "subheader") return 50; 
+      return 380; 
     },
     overscan: 5,
     scrollMargin: offsetTop,
   });
 
-  // --- BACKGROUND CLICK HANDLER (COLLAPSE LOGIC) ---
   const handleRowBackgroundClick = (e, groupId) => {
     if (
       e.target === e.currentTarget ||
@@ -278,43 +271,7 @@ export default function CoinGallery({
       className="categories-container"
       style={{ paddingBottom: "2rem" }}
     >
-      {/* View Toggles */}
-      <div
-        className="view-toggles"
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginBottom: "1rem",
-          paddingRight: "1.5rem",
-        }}
-      >
-        <div
-          className="toggle-group"
-          style={{
-            display: "flex",
-            gap: "4px",
-            background: "white",
-            padding: "4px",
-            borderRadius: "8px",
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-            title="Grid View"
-          >
-            <LayoutGrid size={20} />
-          </button>
-          <button
-            onClick={() => setViewMode("table")}
-            className={`toggle-btn ${viewMode === "table" ? "active" : ""}`}
-            title="Table View"
-          >
-            <TableIcon size={20} />
-          </button>
-        </div>
-      </div>
+      {/* View Toggles removed from here */}
 
       {viewMode === "table" ? (
         /* --- TABLE MODE --- */
@@ -359,8 +316,9 @@ export default function CoinGallery({
                     >
                       {group.name}
                     </h2>
+                    {/* UPDATED: Split spans for gold styling */}
                     <span className="category-count">
-                      {group.coins.length} coins
+                      <span className="text-gold">{group.coins.length} coins</span>
                       <span className="owned-in-category">
                         • {catOwnedCount} owned
                       </span>
@@ -381,7 +339,6 @@ export default function CoinGallery({
                     onClick={(e) => handleRowBackgroundClick(e, group.id)}
                     title="Click background to collapse category"
                     style={{
-                      // REMOVED PADDING: Allows headers to go edge-to-edge
                       padding: "0",
                       backgroundColor: "white",
                       borderLeft: `1px solid ${group.color.border}`,
@@ -393,13 +350,11 @@ export default function CoinGallery({
                       cursor: "pointer",
                     }}
                   >
-                    {/* PERIODS LOOP */}
                     {getCoinsByPeriod(group.coins).map((periodGroup) => {
                       const periodOwnedCount = periodGroup.coins.filter(
                         (c) => c.is_owned
                       ).length;
 
-                      // FIX: Check state using compound key
                       const uniqueKey = `${group.id}-${periodGroup.id}`;
                       const isPeriodExpanded = !collapsedPeriods[uniqueKey];
 
@@ -409,10 +364,8 @@ export default function CoinGallery({
                           className="period-group"
                           style={{ cursor: "default" }}
                         >
-                          {/* TABLE HEADER WRAPPER */}
                           <div
                             className="period-row"
-                            // FIX: Pass both IDs
                             onClick={() =>
                               togglePeriod(group.id, periodGroup.id)
                             }
@@ -435,7 +388,6 @@ export default function CoinGallery({
                           </div>
 
                           {isPeriodExpanded && (
-                            // WRAPPER FOR CONTENT TO RESTORE PADDING
                             <div
                               className="period-content-wrapper"
                               style={{
@@ -524,8 +476,9 @@ export default function CoinGallery({
                         >
                           {row.group.name}
                         </h2>
+                        {/* UPDATED: Split spans for gold styling */}
                         <span className="category-count">
-                          {row.group.coins.length} coins
+                          <span className="text-gold">{row.group.coins.length} coins</span>
                           <span className="owned-in-category">
                             • {row.group.coins.filter((c) => c.is_owned).length}{" "}
                             owned
@@ -545,7 +498,6 @@ export default function CoinGallery({
                   /* 2. PERIOD SUB-HEADER (Grid View) */
                   <div
                     className="period-row"
-                    // FIX: Pass both IDs using row data
                     onClick={(e) => {
                       e.stopPropagation();
                       togglePeriod(row.groupId, row.periodId);

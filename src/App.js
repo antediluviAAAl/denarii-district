@@ -24,7 +24,8 @@ export default function App() {
           filters={filters}
           setFilters={setFilters}
           metadata={metadata}
-          viewMode={viewMode} // Pass down to control disabled state
+          viewMode={viewMode}
+          setViewMode={setViewMode} // Pass down setter to move controls here
         />
 
         <CoinGallery
@@ -32,8 +33,8 @@ export default function App() {
           loading={loading}
           categories={metadata.categories}
           onCoinClick={setSelectedCoin}
-          viewMode={viewMode} // Pass down current mode
-          setViewMode={setViewMode} // Pass down setter
+          viewMode={viewMode}
+          setViewMode={setViewMode}
         />
       </main>
 
