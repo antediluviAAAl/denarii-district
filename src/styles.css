@@ -7,6 +7,9 @@
   --primary-dark: #1d4ed8;
   --secondary: #7c3aed;
 
+  /* NEW: Brand Gold (Matches the #d97706 used in filters) */
+  --brand-gold: #d97706;
+
   /* Backgrounds */
   --light-bg: #f8fafc;
   --card-bg: #ffffff;
@@ -81,37 +84,36 @@ body {
   gap: 0.5rem;
 }
 
+/* UPDATED: Container for the Logo and Title */
 .app-title {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #111827;
+  gap: 0.3rem;
+  /* Apply the font family here, specific sizes are handled in children classes */
+  font-family: 'Cinzel', serif;
+}
+
+/* NEW: Style for "Denarii" */
+.title-denarii {
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--brand-gold);
+}
+
+/* NEW: Style for " District" */
+.title-district {
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: #111827; /* Standard dark text */
 }
 
 .app-icon {
-  background: var(--primary);
-  padding: 0.75rem;
-  border-radius: var(--radius-sm);
+  /* Removed standard blue background to let the SVG shine */
+  background: transparent;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.app-icon svg {
-  color: white;
-}
-
-/* Custom Logo Tweaks */
-.app-icon.custom-logo-bg {
-  background: linear-gradient(
-    135deg,
-    var(--primary) 0%,
-    var(--primary-dark) 100%
-  );
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .app-subtitle {
@@ -190,10 +192,11 @@ body {
   align-items: center;
 }
 
+/* UPDATED: Gold Search Icon */
 .search-icon {
   position: absolute;
   left: 1rem;
-  color: var(--text-light);
+  color: var(--brand-gold); /* Updated to Gold */
   pointer-events: none;
 }
 
@@ -259,9 +262,9 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* Custom Gold Accent for Filter Icons */
+/* UPDATED: Ensure filter labels use the new gold variable */
 .filter-label svg {
-  color: #d97706; /* Metallic Gold (Amber-600) */
+  color: var(--brand-gold);
   filter: drop-shadow(0 1px 1px rgba(217, 119, 6, 0.2));
   transition: color 0.2s ease;
 }
@@ -673,6 +676,11 @@ body {
   gap: 0.5rem;
   font-size: 0.75rem;
   color: var(--text-light);
+}
+
+/* UPDATED: Target icons inside coin card info items to be Gold */
+.coin-info-item svg {
+  color: var(--brand-gold);
 }
 
 .coin-subject {

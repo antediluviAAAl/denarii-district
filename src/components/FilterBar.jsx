@@ -82,7 +82,8 @@ export default function FilterBar({ filters, setFilters, metadata, viewMode }) {
       {/* Search Box */}
       <div className="search-box">
         <div className="search-input-wrapper">
-          <Search className="search-icon" />
+          {/* UPDATED: Size set to 20 to be a tad smaller */}
+          <Search className="search-icon" size={20} />
           <input
             type="text"
             className="search-input"

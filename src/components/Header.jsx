@@ -1,4 +1,6 @@
-import { Coins, Database, CheckCircle } from "lucide-react";
+import { Database, CheckCircle } from "lucide-react";
+// Import the SVG directly as a React Component (supported by create-react-app)
+import { ReactComponent as DenariiLogo } from "../assets/logo.svg";
 
 export default function Header({
   totalCoins = 264962,
@@ -11,9 +13,12 @@ export default function Header({
         <div className="header-left">
           <h1 className="app-title">
             <div className="app-icon">
-              <Coins size={24} />
+              {/* Using the imported Logo, sizing handled via props or inline style */}
+              <DenariiLogo style={{ width: 48, height: 48 }} />
             </div>
-            <span>Denarii District</span>
+            {/* Split Title for custom styling */}
+            <span className="title-denarii">Denarii</span>
+            <span className="title-district"> District</span>
           </h1>
           <p className="app-subtitle">
             <Database size={16} />
