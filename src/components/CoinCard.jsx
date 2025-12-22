@@ -3,8 +3,9 @@ import { Calendar, DollarSign, Hash, Eye } from "lucide-react";
 import FadeInImage from "./FadeInImage";
 
 const CoinCard = memo(function CoinCard({ coin, onClick }) {
-  const obverseUrl = coin.display_obverse;
-  const reverseUrl = coin.display_reverse;
+  // PERFORMANCE: Use Medium sized image for the grid (approx 500px)
+  const obverseUrl = coin.images?.obverse?.medium;
+  const reverseUrl = coin.images?.reverse?.medium;
   const denomination = coin.d_denominations?.denomination_name;
 
   return (

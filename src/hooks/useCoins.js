@@ -16,17 +16,21 @@ const fetchMetadata = async () => {
   };
 };
 
-// 2. Fetch Owned Coins
+// 2. Fetch Owned Coins (UPDATED with new columns)
 const fetchOwnedCoins = async () => {
   const { data } = await supabase
     .from("d_coins_owned")
-    .select("coin_id, image_url_obverse, image_url_reverse");
+    .select(
+      "coin_id, url_obverse, url_reverse, medium_url_obverse, medium_url_reverse, thumb_url_obverse, thumb_url_reverse"
+    );
 
   const cache = {};
   (data || []).forEach((c) => {
     cache[c.coin_id] = {
-      obverse: c.image_url_obverse,
-      reverse: c.image_url_reverse,
+      // Direct Maps
+      full: { obverse: c.url_obverse, reverse: c.url_reverse },
+      medium: { obverse: c.medium_url_obverse, reverse: c.medium_url_reverse },
+      thumb: { obverse: c.thumb_url_obverse, reverse: c.thumb_url_reverse },
     };
   });
   return { cache, count: data?.length || 0 };
@@ -145,14 +149,32 @@ const fetchCoins = async ({ filters, ownedCache }) => {
     }
   }
 
-  // D. Process Data (Attach Ownership)
+  // D. Process Data (Attach Ownership & Smart Image Selection)
   return rawData.map((coin) => {
     const ownedData = ownedCache[coin.coin_id];
+    
+    // Helper to calculate cascading fallback: Thumb -> Medium -> Full
+    const getImages = (side) => {
+      if (!ownedData) return { full: null, medium: null, thumb: null };
+      
+      const full = ownedData.full[side];
+      const medium = ownedData.medium[side] || full;
+      const thumb = ownedData.thumb[side] || medium || full;
+
+      return { full, medium, thumb };
+    };
+
+    const obverseImgs = getImages("obverse");
+    const reverseImgs = getImages("reverse");
+
     return {
       ...coin,
       is_owned: !!ownedData,
-      display_obverse: ownedData?.obverse || null,
-      display_reverse: ownedData?.reverse || null,
+      // Structured Image Object
+      images: {
+        obverse: obverseImgs,
+        reverse: reverseImgs,
+      },
     };
   });
 };

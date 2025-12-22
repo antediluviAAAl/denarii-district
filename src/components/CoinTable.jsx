@@ -176,8 +176,6 @@ export default function CoinTable({ coins, onCoinClick }) {
   };
 
   const handleMouseMove = (e) => {
-    // We keep this in parent to update Tooltip
-    // Child (Matrix) ignores this unless we pass explicit props that change
     if (hoverState.coin) {
       setHoverState((prev) => ({
         ...prev,
@@ -198,6 +196,16 @@ export default function CoinTable({ coins, onCoinClick }) {
 
   if (coins.length === 0) return null;
 
+  // HELPER: Select tooltip image
+  // Use Thumbnail for speed/table context
+  const getTooltipImage = (side) => {
+    if (!hoverState.coin) return null;
+    return hoverState.coin.images?.[side]?.thumb;
+  };
+
+  const tooltipObverse = getTooltipImage("obverse");
+  const tooltipReverse = getTooltipImage("reverse");
+
   return (
     <div className="coin-table-wrapper">
       <div className="coin-table-container">
@@ -205,7 +213,7 @@ export default function CoinTable({ coins, onCoinClick }) {
           years={years}
           denominations={denominations}
           matrix={matrix}
-          hoverState={hoverState} // Needed for series highlighting
+          hoverState={hoverState}
           onCoinClick={onCoinClick}
           onMouseEnter={handleMouseEnter}
           onMouseMove={handleMouseMove}
@@ -229,18 +237,18 @@ export default function CoinTable({ coins, onCoinClick }) {
             </span>
           </div>
           <div className="tooltip-images">
-            {hoverState.coin.display_obverse ? (
+            {tooltipObverse ? (
               <img
-                src={hoverState.coin.display_obverse}
+                src={tooltipObverse}
                 alt="Obverse"
                 className="tooltip-img"
               />
             ) : (
               <div className="tooltip-placeholder">No Obv</div>
             )}
-            {hoverState.coin.display_reverse ? (
+            {tooltipReverse ? (
               <img
-                src={hoverState.coin.display_reverse}
+                src={tooltipReverse}
                 alt="Reverse"
                 className="tooltip-img"
               />

@@ -47,10 +47,10 @@ export default function CoinModal({ coin, onClose }) {
   // Merge Data
   const displayData = details ? { ...coin, ...details } : coin;
 
-  // Explicitly ensure the Owned Status and Images from the parent (which has the cache) are preserved
+  // EXPLICIT: Preserve the ownership and image objects from the parent (Cache)
+  // because 'details' fetch comes from f_coins which might not have the new image columns
   displayData.is_owned = coin.is_owned;
-  displayData.display_obverse = coin.display_obverse;
-  displayData.display_reverse = coin.display_reverse;
+  displayData.images = coin.images; 
 
   const renderLink = (text, url) => {
     if (!url) return <span>{text || "Unknown"}</span>;
@@ -67,6 +67,10 @@ export default function CoinModal({ coin, onClose }) {
       </a>
     );
   };
+
+  // PERFORMANCE: Use Full Quality images for the Detail Modal
+  const obverseFull = displayData.images?.obverse?.full;
+  const reverseFull = displayData.images?.reverse?.full;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -97,21 +101,21 @@ export default function CoinModal({ coin, onClose }) {
             <>
               {/* Images Section */}
               <div className="coin-images">
-                {displayData.display_obverse && (
+                {obverseFull && (
                   <div className="coin-image-modal">
                     <h3>Obverse</h3>
                     <FadeInImage
-                      src={displayData.display_obverse}
+                      src={obverseFull}
                       className="modal-image"
                       alt="Obverse"
                     />
                   </div>
                 )}
-                {displayData.display_reverse && (
+                {reverseFull && (
                   <div className="coin-image-modal">
                     <h3>Reverse</h3>
                     <FadeInImage
-                      src={displayData.display_reverse}
+                      src={reverseFull}
                       className="modal-image"
                       alt="Reverse"
                     />
