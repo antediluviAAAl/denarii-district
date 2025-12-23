@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Search,
   X,
@@ -16,17 +17,15 @@ export default function FilterBar({
   metadata,
   viewMode,
   setViewMode,
+  isExploreMode, // NEW PROP
 }) {
-  // Helper to update specific filters
   const updateFilter = (key, value) => {
     setFilters((prev) => {
-      // If clearing country, we must also clear period
       if (key === "country") return { ...prev, [key]: value, period: "" };
       return { ...prev, [key]: value };
     });
   };
 
-  // Helper to clear everything
   const clearAllFilters = () => {
     setFilters((prev) => ({
       ...prev,
@@ -37,10 +36,15 @@ export default function FilterBar({
     }));
   };
 
-  // Generate the list of active tags based on current state
+  // SAFETY: If switching to Table View, forbid Price sort
+  useEffect(() => {
+    if (viewMode === "table" && filters.sortBy.startsWith("price")) {
+      updateFilter("sortBy", "year_desc");
+    }
+  }, [viewMode, filters.sortBy]);
+
   const getActiveTags = () => {
     const tags = [];
-
     if (filters.search) {
       tags.push({
         key: "search",
@@ -48,7 +52,6 @@ export default function FilterBar({
         action: () => updateFilter("search", ""),
       });
     }
-
     if (filters.showOwned === "owned") {
       tags.push({
         key: "showOwned",
@@ -56,7 +59,6 @@ export default function FilterBar({
         action: () => updateFilter("showOwned", "all"),
       });
     }
-
     if (filters.country) {
       const countryName =
         metadata.countries.find((c) => c.country_id == filters.country)
@@ -67,7 +69,6 @@ export default function FilterBar({
         action: () => updateFilter("country", ""),
       });
     }
-
     if (filters.period) {
       const periodName =
         metadata.periods.find((p) => p.period_id == filters.period)
@@ -78,24 +79,26 @@ export default function FilterBar({
         action: () => updateFilter("period", ""),
       });
     }
-
     return tags;
   };
 
   const activeTags = getActiveTags();
   const hasFilters = activeTags.length > 0;
 
+  const displayedCountries = metadata.countries.filter((c) => {
+    if (!metadata.validCountryIds) return true;
+    return metadata.validCountryIds.has(c.country_id);
+  });
+
   return (
     <div className="controls-container">
-      {/* ROW 1: INPUTS (Search + Selects) */}
       <div className="filter-input-row">
-        {/* Search Box */}
+        {/* Search */}
         <div className="search-box">
           <label className="filter-label">
             <Search size={16} /> Search
           </label>
           <div className="search-input-wrapper">
-            {/* UPDATED: Icon removed from here */}
             <input
               type="text"
               className="search-input"
@@ -114,7 +117,7 @@ export default function FilterBar({
           </div>
         </div>
 
-        {/* Filter Dropdowns */}
+        {/* Filters */}
         <div className="filter-group">
           <label className="filter-label">
             <CheckCircle size={16} /> Show
@@ -139,7 +142,7 @@ export default function FilterBar({
             onChange={(e) => updateFilter("country", e.target.value)}
           >
             <option value="">All Countries</option>
-            {metadata.countries.map((c) => (
+            {displayedCountries.map((c) => (
               <option key={c.country_id} value={c.country_id}>
                 {c.country_name}
               </option>
@@ -172,28 +175,35 @@ export default function FilterBar({
           </label>
           <select
             className="filter-select"
-            value={filters.sortBy}
+            value={isExploreMode ? "" : filters.sortBy} // Clear value if disabled
             onChange={(e) => updateFilter("sortBy", e.target.value)}
-            disabled={viewMode === "table"}
+            disabled={isExploreMode} // DISABLE in Explore Mode
             title={
-              viewMode === "table" ? "Sorting is automatic in Table View" : ""
+              isExploreMode
+                ? "Sorting is disabled in Explore mode (randomized selection)"
+                : ""
             }
+            style={isExploreMode ? { opacity: 0.6, cursor: "not-allowed" } : {}}
           >
+            {isExploreMode && <option value="">Randomized</option>}
             <option value="year_desc">Year (Newest)</option>
             <option value="year_asc">Year (Oldest)</option>
-            <option value="price_desc">Price (High-Low)</option>
+            {viewMode !== "table" && (
+              <>
+                <option value="price_desc">Price (High-Low)</option>
+                <option value="price_asc">Price (Low-High)</option>
+              </>
+            )}
           </select>
         </div>
       </div>
 
-      {/* ROW 2: STATUS & TOGGLES */}
+      {/* Tags & View Mode */}
       <div className="filter-status-row">
-        {/* Left: Active Tags - UPDATED to always render container */}
         <div className="active-filters-bar">
           <div className="active-filters-label">
             <Tag size={14} className="text-gold" /> Active Filters:
           </div>
-
           {hasFilters && (
             <div className="filter-tags-list">
               {activeTags.map((tag) => (
@@ -207,7 +217,6 @@ export default function FilterBar({
                   <X size={14} />
                 </button>
               ))}
-
               <button className="clear-all-tags" onClick={clearAllFilters}>
                 Clear All
               </button>
@@ -215,7 +224,6 @@ export default function FilterBar({
           )}
         </div>
 
-        {/* Right: View Toggles */}
         <div className="view-toggles">
           <button
             onClick={() => setViewMode("grid")}

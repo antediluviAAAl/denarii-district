@@ -1,8 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import {
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "../hooks/useWindowSize";
 import CoinCard from "./CoinCard";
@@ -59,7 +56,6 @@ const PeriodHeader = ({
         {title}
       </h3>
 
-      {/* UPDATED: Split spans for gold styling */}
       <span
         className="category-count"
         style={{
@@ -82,6 +78,7 @@ export default function CoinGallery({
   onCoinClick,
   viewMode,
   setViewMode,
+  sortBy,
 }) {
   const { width } = useWindowSize();
   const parentRef = useRef(null);
@@ -99,9 +96,12 @@ export default function CoinGallery({
     return 4;
   }, [width]);
 
-  // Group by Category (Top Level)
+  // --- GROUPING LOGIC (Fixed Categories) ---
+  // Categories are always sorted Alphabetically (Locked)
   const groupedCoins = useMemo(() => {
     const groupsMap = {};
+
+    // 1. Initialize Groups
     categories.forEach((cat, index) => {
       groupsMap[cat.type_id] = {
         id: cat.type_id,
@@ -112,11 +112,12 @@ export default function CoinGallery({
     });
 
     const uncategorizedId = "uncategorized";
+
+    // 2. Populate Groups
     coins.forEach((coin) => {
-      const typeId = coin.type_id;
-      if (typeId && groupsMap[typeId]) {
-        groupsMap[typeId].coins.push(coin);
-      } else {
+      let targetGroup = groupsMap[coin.type_id];
+
+      if (!targetGroup) {
         if (!groupsMap[uncategorizedId]) {
           groupsMap[uncategorizedId] = {
             id: uncategorizedId,
@@ -125,10 +126,13 @@ export default function CoinGallery({
             color: CATEGORY_COLORS[5],
           };
         }
-        groupsMap[uncategorizedId].coins.push(coin);
+        targetGroup = groupsMap[uncategorizedId];
       }
+
+      targetGroup.coins.push(coin);
     });
 
+    // 3. Sort Categories (Strictly Alphabetical)
     return Object.values(groupsMap)
       .filter((g) => g.coins.length > 0)
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -141,33 +145,104 @@ export default function CoinGallery({
   };
 
   const [collapsedPeriods, setCollapsedPeriods] = useState({});
-
   const togglePeriod = (categoryId, periodId) => {
     const key = `${categoryId}-${periodId}`;
     setCollapsedPeriods((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // --- HELPER: Group Coins by Period ---
-  const getCoinsByPeriod = (categoryCoins) => {
+  // --- HELPER: Group Coins by Period (Split Logic) ---
+  // isTableMode = TRUE  -> Sort Periods by Historical Start Year
+  // isTableMode = FALSE -> Sort Periods by Content (Bubble Up)
+  const getCoinsByPeriod = (categoryCoins, isTableMode) => {
     const periodMap = {};
     const noPeriodKey = "no_period";
 
+    // 1. Build Map & Calculate Stats
     categoryCoins.forEach((c) => {
       const pid = c.period_id || noPeriodKey;
-      const pName = c.d_period?.period_name || "General Issues";
-      const startYear = c.d_period?.period_start_year || 0;
 
       if (!periodMap[pid]) {
         periodMap[pid] = {
           id: pid,
-          name: pName,
-          startYear: startYear,
+          name: c.d_period?.period_name || "General Issues",
+          startYear: c.d_period?.period_start_year || 0,
           coins: [],
+          // Stats for "Bubble Up" sorting
+          stats: {
+            minYear: 9999,
+            maxYear: -9999,
+            maxPrice: 0,
+            minPrice: 9999999,
+          },
         };
       }
-      periodMap[pid].coins.push(c);
+      const group = periodMap[pid];
+      group.coins.push(c);
+
+      // Update Stats
+      const y = c.year || 0;
+      const p = c.price_usd || 0;
+      if (y < group.stats.minYear) group.stats.minYear = y;
+      if (y > group.stats.maxYear) group.stats.maxYear = y;
+      if (p > group.stats.maxPrice) group.stats.maxPrice = p;
+      if (p < group.stats.minPrice) group.stats.minPrice = p;
     });
-    return Object.values(periodMap).sort((a, b) => b.startYear - a.startYear);
+
+    // 2. Sort Periods
+    const sortedPeriods = Object.values(periodMap).sort((a, b) => {
+      // --- TABLE MODE (Historical Only) ---
+      if (isTableMode) {
+        if (sortBy === "year_asc") return a.startYear - b.startYear;
+        // Default / year_desc / price (fallback)
+        return b.startYear - a.startYear;
+      }
+
+      // --- GRID MODE (Bubble Up / Content Based) ---
+      if (sortBy === "year_asc") {
+        // Oldest Coin in group wins
+        const valA = a.stats.minYear;
+        const valB = b.stats.minYear;
+        if (valA !== valB) return valA - valB;
+      } else if (sortBy === "price_desc") {
+        // Highest Price in group wins
+        const valA = a.stats.maxPrice;
+        const valB = b.stats.maxPrice;
+        if (valA !== valB) return valB - valA;
+      } else if (sortBy === "price_asc") {
+        // Lowest Price in group wins
+        // Treat untouched minPrice as 0 for safety
+        const valA = a.stats.minPrice === 9999999 ? 0 : a.stats.minPrice;
+        const valB = b.stats.minPrice === 9999999 ? 0 : b.stats.minPrice;
+        if (valA !== valB) return valA - valB;
+      } else {
+        // year_desc (Newest Coin wins)
+        const valA = a.stats.maxYear;
+        const valB = b.stats.maxYear;
+        if (valA !== valB) return valB - valA;
+      }
+
+      // Fallback for ties: Historical Start Year
+      return b.startYear - a.startYear;
+    });
+
+    // 3. Sort Coins INSIDE Period (Always matches Sort By)
+    sortedPeriods.forEach((p) => {
+      p.coins.sort((coinA, coinB) => {
+        const yearA = coinA.year || 0;
+        const yearB = coinB.year || 0;
+        const priceA = coinA.price_usd || 0;
+        const priceB = coinB.price_usd || 0;
+
+        if (sortBy === "year_asc") return yearA - yearB;
+        if (sortBy === "year_desc") return yearB - yearA;
+        if (sortBy === "price_desc") return priceB - priceA;
+        if (sortBy === "price_asc") return priceA - priceB;
+
+        return yearB - yearA;
+      });
+    });
+
+    return sortedPeriods;
   };
 
   // --- VIRTUALIZER (GRID ONLY) ---
@@ -179,7 +254,8 @@ export default function CoinGallery({
       rows.push({ type: "header", group });
 
       if (expandedCategories[group.id]) {
-        const periodGroups = getCoinsByPeriod(group.coins);
+        // GRID MODE: Pass false to use "Bubble Up" sorting
+        const periodGroups = getCoinsByPeriod(group.coins, false);
 
         periodGroups.forEach((period, pIndex) => {
           const uniqueKey = `${group.id}-${period.id}`;
@@ -226,15 +302,16 @@ export default function CoinGallery({
     columns,
     loading,
     viewMode,
+    sortBy,
   ]);
 
   const rowVirtualizer = useWindowVirtualizer({
     count: virtualRows.length,
     estimateSize: (index) => {
       const row = virtualRows[index];
-      if (row.type === "header") return 94; 
-      if (row.type === "subheader") return 50; 
-      return 380; 
+      if (row.type === "header") return 94;
+      if (row.type === "subheader") return 50;
+      return 380;
     },
     overscan: 5,
     scrollMargin: offsetTop,
@@ -271,8 +348,6 @@ export default function CoinGallery({
       className="categories-container"
       style={{ paddingBottom: "2rem" }}
     >
-      {/* View Toggles removed from here */}
-
       {viewMode === "table" ? (
         /* --- TABLE MODE --- */
         <div className="tables-layout">
@@ -316,9 +391,10 @@ export default function CoinGallery({
                     >
                       {group.name}
                     </h2>
-                    {/* UPDATED: Split spans for gold styling */}
                     <span className="category-count">
-                      <span className="text-gold">{group.coins.length} coins</span>
+                      <span className="text-gold">
+                        {group.coins.length} coins
+                      </span>
                       <span className="owned-in-category">
                         • {catOwnedCount} owned
                       </span>
@@ -350,7 +426,8 @@ export default function CoinGallery({
                       cursor: "pointer",
                     }}
                   >
-                    {getCoinsByPeriod(group.coins).map((periodGroup) => {
+                    {/* TABLE MODE: Pass true to force Historical Sorting */}
+                    {getCoinsByPeriod(group.coins, true).map((periodGroup) => {
                       const periodOwnedCount = periodGroup.coins.filter(
                         (c) => c.is_owned
                       ).length;
@@ -476,9 +553,10 @@ export default function CoinGallery({
                         >
                           {row.group.name}
                         </h2>
-                        {/* UPDATED: Split spans for gold styling */}
                         <span className="category-count">
-                          <span className="text-gold">{row.group.coins.length} coins</span>
+                          <span className="text-gold">
+                            {row.group.coins.length} coins
+                          </span>
                           <span className="owned-in-category">
                             • {row.group.coins.filter((c) => c.is_owned).length}{" "}
                             owned

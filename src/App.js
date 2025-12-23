@@ -12,8 +12,16 @@ export default function App() {
   // Lifted state: Both FilterBar and CoinGallery need access to this
   const [viewMode, setViewMode] = useState("grid");
 
-  const { coins, loading, filters, setFilters, metadata, ownedCount } =
-    useCoins();
+  // Destructure new 'isExploreMode' property
+  const {
+    coins,
+    loading,
+    filters,
+    setFilters,
+    metadata,
+    ownedCount,
+    isExploreMode,
+  } = useCoins();
 
   return (
     <div className="app-container">
@@ -25,7 +33,8 @@ export default function App() {
           setFilters={setFilters}
           metadata={metadata}
           viewMode={viewMode}
-          setViewMode={setViewMode} // Pass down setter to move controls here
+          setViewMode={setViewMode}
+          isExploreMode={isExploreMode} // NEW: Pass down to control Sort State
         />
 
         <CoinGallery
@@ -35,6 +44,7 @@ export default function App() {
           onCoinClick={setSelectedCoin}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          sortBy={filters.sortBy}
         />
       </main>
 
