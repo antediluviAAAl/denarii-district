@@ -4,6 +4,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "../hooks/useWindowSize";
 import CoinCard from "./CoinCard";
 import CoinTable from "./CoinTable";
+import CoinListItem from "./CoinListItem"; // NEW IMPORT
 
 const CATEGORY_COLORS = [
   { bg: "#fef3c7", border: "#f59e0b", text: "#92400e" },
@@ -88,20 +89,18 @@ export default function CoinGallery({
     if (parentRef.current) setOffsetTop(parentRef.current.offsetTop);
   }, [width]);
 
-  // --- GRID LOGIC ---
+  // --- GRID & LIST LOGIC ---
   const columns = useMemo(() => {
+    if (viewMode === "list") return 1; // Force single column for List View
     if (width < 650) return 1;
     if (width < 950) return 2;
     if (width < 1300) return 3;
     return 4;
-  }, [width]);
+  }, [width, viewMode]);
 
   // --- GROUPING LOGIC (Fixed Categories) ---
-  // Categories are always sorted Alphabetically (Locked)
   const groupedCoins = useMemo(() => {
     const groupsMap = {};
-
-    // 1. Initialize Groups
     categories.forEach((cat, index) => {
       groupsMap[cat.type_id] = {
         id: cat.type_id,
@@ -112,11 +111,8 @@ export default function CoinGallery({
     });
 
     const uncategorizedId = "uncategorized";
-
-    // 2. Populate Groups
     coins.forEach((coin) => {
       let targetGroup = groupsMap[coin.type_id];
-
       if (!targetGroup) {
         if (!groupsMap[uncategorizedId]) {
           groupsMap[uncategorizedId] = {
@@ -128,11 +124,9 @@ export default function CoinGallery({
         }
         targetGroup = groupsMap[uncategorizedId];
       }
-
       targetGroup.coins.push(coin);
     });
 
-    // 3. Sort Categories (Strictly Alphabetical)
     return Object.values(groupsMap)
       .filter((g) => g.coins.length > 0)
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -150,14 +144,11 @@ export default function CoinGallery({
     setCollapsedPeriods((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // --- HELPER: Group Coins by Period (Split Logic) ---
-  // isTableMode = TRUE  -> Sort Periods by Historical Start Year
-  // isTableMode = FALSE -> Sort Periods by Content (Bubble Up)
+  // --- HELPER: Group Coins by Period ---
   const getCoinsByPeriod = (categoryCoins, isTableMode) => {
     const periodMap = {};
     const noPeriodKey = "no_period";
 
-    // 1. Build Map & Calculate Stats
     categoryCoins.forEach((c) => {
       const pid = c.period_id || noPeriodKey;
 
@@ -167,7 +158,6 @@ export default function CoinGallery({
           name: c.d_period?.period_name || "General Issues",
           startYear: c.d_period?.period_start_year || 0,
           coins: [],
-          // Stats for "Bubble Up" sorting
           stats: {
             minYear: 9999,
             maxYear: -9999,
@@ -179,7 +169,6 @@ export default function CoinGallery({
       const group = periodMap[pid];
       group.coins.push(c);
 
-      // Update Stats
       const y = c.year || 0;
       const p = c.price_usd || 0;
       if (y < group.stats.minYear) group.stats.minYear = y;
@@ -188,44 +177,34 @@ export default function CoinGallery({
       if (p < group.stats.minPrice) group.stats.minPrice = p;
     });
 
-    // 2. Sort Periods
     const sortedPeriods = Object.values(periodMap).sort((a, b) => {
-      // --- TABLE MODE (Historical Only) ---
+      // TABLE MODE: Historical Sort
       if (isTableMode) {
         if (sortBy === "year_asc") return a.startYear - b.startYear;
-        // Default / year_desc / price (fallback)
         return b.startYear - a.startYear;
       }
 
-      // --- GRID MODE (Bubble Up / Content Based) ---
+      // GRID & LIST MODE: Bubble Up Sort
       if (sortBy === "year_asc") {
-        // Oldest Coin in group wins
         const valA = a.stats.minYear;
         const valB = b.stats.minYear;
         if (valA !== valB) return valA - valB;
       } else if (sortBy === "price_desc") {
-        // Highest Price in group wins
         const valA = a.stats.maxPrice;
         const valB = b.stats.maxPrice;
         if (valA !== valB) return valB - valA;
       } else if (sortBy === "price_asc") {
-        // Lowest Price in group wins
-        // Treat untouched minPrice as 0 for safety
         const valA = a.stats.minPrice === 9999999 ? 0 : a.stats.minPrice;
         const valB = b.stats.minPrice === 9999999 ? 0 : b.stats.minPrice;
         if (valA !== valB) return valA - valB;
       } else {
-        // year_desc (Newest Coin wins)
         const valA = a.stats.maxYear;
         const valB = b.stats.maxYear;
         if (valA !== valB) return valB - valA;
       }
-
-      // Fallback for ties: Historical Start Year
       return b.startYear - a.startYear;
     });
 
-    // 3. Sort Coins INSIDE Period (Always matches Sort By)
     sortedPeriods.forEach((p) => {
       p.coins.sort((coinA, coinB) => {
         const yearA = coinA.year || 0;
@@ -237,7 +216,6 @@ export default function CoinGallery({
         if (sortBy === "year_desc") return yearB - yearA;
         if (sortBy === "price_desc") return priceB - priceA;
         if (sortBy === "price_asc") return priceA - priceB;
-
         return yearB - yearA;
       });
     });
@@ -245,7 +223,7 @@ export default function CoinGallery({
     return sortedPeriods;
   };
 
-  // --- VIRTUALIZER (GRID ONLY) ---
+  // --- VIRTUALIZER (GRID & LIST) ---
   const virtualRows = useMemo(() => {
     if (loading || viewMode === "table") return [];
     const rows = [];
@@ -254,7 +232,7 @@ export default function CoinGallery({
       rows.push({ type: "header", group });
 
       if (expandedCategories[group.id]) {
-        // GRID MODE: Pass false to use "Bubble Up" sorting
+        // GRID/LIST MODE: Pass false to use "Bubble Up" sorting (respects price sort)
         const periodGroups = getCoinsByPeriod(group.coins, false);
 
         periodGroups.forEach((period, pIndex) => {
@@ -311,7 +289,8 @@ export default function CoinGallery({
       const row = virtualRows[index];
       if (row.type === "header") return 94;
       if (row.type === "subheader") return 50;
-      return 380;
+      // List = 100px (Shorter), Grid = 380px
+      return viewMode === "list" ? 100 : 380;
     },
     overscan: 5,
     scrollMargin: offsetTop,
@@ -366,7 +345,6 @@ export default function CoinGallery({
                   overflow: "visible",
                 }}
               >
-                {/* Category Header */}
                 <div
                   className="category-header"
                   onClick={() => toggleCategory(group.id)}
@@ -426,12 +404,10 @@ export default function CoinGallery({
                       cursor: "pointer",
                     }}
                   >
-                    {/* TABLE MODE: Pass true to force Historical Sorting */}
                     {getCoinsByPeriod(group.coins, true).map((periodGroup) => {
                       const periodOwnedCount = periodGroup.coins.filter(
                         (c) => c.is_owned
                       ).length;
-
                       const uniqueKey = `${group.id}-${periodGroup.id}`;
                       const isPeriodExpanded = !collapsedPeriods[uniqueKey];
 
@@ -488,7 +464,7 @@ export default function CoinGallery({
           })}
         </div>
       ) : (
-        /* --- GRID MODE (Virtualized) --- */
+        /* --- GRID & LIST MODE (Virtualized) --- */
         <div
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
@@ -573,7 +549,7 @@ export default function CoinGallery({
                     </div>
                   </div>
                 ) : row.type === "subheader" ? (
-                  /* 2. PERIOD SUB-HEADER (Grid View) */
+                  /* 2. PERIOD SUB-HEADER */
                   <div
                     className="period-row"
                     onClick={(e) => {
@@ -606,7 +582,7 @@ export default function CoinGallery({
                     />
                   </div>
                 ) : (
-                  /* 3. COIN ROW */
+                  /* 3. COIN ROW (RENDER LIST OR CARD) */
                   <div
                     className="period-row virtual-row-container"
                     onClick={(e) => handleRowBackgroundClick(e, row.groupId)}
@@ -629,18 +605,30 @@ export default function CoinGallery({
                     }}
                   >
                     <div className="virtual-row">
-                      {row.coins.map((coin) => (
-                        <CoinCard
-                          key={coin.coin_id}
-                          coin={coin}
-                          onClick={onCoinClick}
-                        />
-                      ))}
-                      {Array.from({ length: columns - row.coins.length }).map(
-                        (_, i) => (
-                          <div key={`spacer-${i}`} className="virtual-spacer" />
+                      {row.coins.map((coin) =>
+                        viewMode === "list" ? (
+                          <CoinListItem
+                            key={coin.coin_id}
+                            coin={coin}
+                            onClick={onCoinClick}
+                          />
+                        ) : (
+                          <CoinCard
+                            key={coin.coin_id}
+                            coin={coin}
+                            onClick={onCoinClick}
+                          />
                         )
                       )}
+                      {viewMode === "grid" &&
+                        Array.from({ length: columns - row.coins.length }).map(
+                          (_, i) => (
+                            <div
+                              key={`spacer-${i}`}
+                              className="virtual-spacer"
+                            />
+                          )
+                        )}
                     </div>
                   </div>
                 )}

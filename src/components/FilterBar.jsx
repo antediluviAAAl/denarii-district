@@ -9,6 +9,7 @@ import {
   Tag,
   LayoutGrid,
   Table as TableIcon,
+  List as ListIcon, // New Icon
 } from "lucide-react";
 
 export default function FilterBar({
@@ -17,7 +18,7 @@ export default function FilterBar({
   metadata,
   viewMode,
   setViewMode,
-  isExploreMode, // NEW PROP
+  isExploreMode,
 }) {
   const updateFilter = (key, value) => {
     setFilters((prev) => {
@@ -175,9 +176,9 @@ export default function FilterBar({
           </label>
           <select
             className="filter-select"
-            value={isExploreMode ? "" : filters.sortBy} // Clear value if disabled
+            value={isExploreMode ? "" : filters.sortBy}
             onChange={(e) => updateFilter("sortBy", e.target.value)}
-            disabled={isExploreMode} // DISABLE in Explore Mode
+            disabled={isExploreMode}
             title={
               isExploreMode
                 ? "Sorting is disabled in Explore mode (randomized selection)"
@@ -188,6 +189,7 @@ export default function FilterBar({
             {isExploreMode && <option value="">Randomized</option>}
             <option value="year_desc">Year (Newest)</option>
             <option value="year_asc">Year (Oldest)</option>
+            {/* ENABLE sorting for Grid AND List view */}
             {viewMode !== "table" && (
               <>
                 <option value="price_desc">Price (High-Low)</option>
@@ -231,6 +233,13 @@ export default function FilterBar({
             title="Grid View"
           >
             <LayoutGrid size={20} />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
+            title="List View"
+          >
+            <ListIcon size={20} />
           </button>
           <button
             onClick={() => setViewMode("table")}

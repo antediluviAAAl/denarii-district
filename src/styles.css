@@ -820,7 +820,6 @@ body {
   border-radius: 6px;
   font-size: 0.65rem;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   pointer-events: none;
   backdrop-filter: blur(4px);
@@ -1540,4 +1539,169 @@ body {
   color: #475569;
   margin: 0;
   padding-left: 0.75rem;
+}
+
+/* =========================================
+   16. LIST VIEW (NEW)
+   ========================================= */
+.coin-list-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  gap: 1rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  width: 100%;
+  height: 100%; /* Important for virtualization */
+  position: relative;
+  overflow: hidden;
+}
+
+.coin-list-item:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.coin-list-item.owned {
+  background: linear-gradient(to right, #ffffff, #f0fdf4);
+  border-left: 4px solid var(--owned-green);
+}
+
+/* --- DUAL IMAGES CONTAINER --- */
+.list-images-container {
+  display: flex;
+  gap: 4px; /* Space between coins */
+  flex-shrink: 0;
+}
+
+.list-img-wrapper {
+  width: 70px; /* Fixed width for each side */
+  height: 70px;
+  background: var(--border-light);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.list-item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-item-placeholder {
+  font-size: 0.6rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+}
+
+.list-badge-rare {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(217, 119, 6, 0.9);
+  color: white;
+  font-size: 0.5rem;
+  text-align: center;
+  font-weight: 700;
+  padding: 1px 0;
+}
+
+/* --- CONTENT --- */
+.list-item-content {
+  flex: 1;
+  min-width: 0; /* Allows text truncation */
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.list-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.list-item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-item-denom {
+  font-size: 0.75rem;
+  background: var(--border-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+
+.list-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-light);
+}
+
+.meta-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+/* --- ACTIONS --- */
+.list-item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  min-width: 80px;
+  padding-right: 0.5rem;
+}
+
+.list-owned-status {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--owned-green);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.list-price {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.list-price svg {
+  color: var(--brand-gold);
+  width: 14px;
+  margin-right: 2px;
+}
+
+@media (max-width: 600px) {
+  .mobile-hidden {
+    display: none;
+  }
+  .list-img-wrapper {
+    width: 50px;
+    height: 50px;
+  }
 }
